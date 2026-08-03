@@ -3638,7 +3638,7 @@
           // Check if there's a NEW image to upload or a replacement queued for CRM.
           var hasNewImage = Boolean(mark.attachmentImageEncryptedId) && (imageNeedsReplace || !rowId);
 
-          if (imageWasDeleted && rowId) {
+          if ((imageWasDeleted || imageNeedsReplace) && rowId) {
              // ZOHO SUBFORM BUG WORKAROUND:
              // Zoho entirely ignores or strips nulls/empty payloads meant to clear a file upload field.
              // Best workaround: Destroy the entire affected subform line item and seamlessly clone it 
@@ -3651,10 +3651,16 @@
              delete keptRowIds[String(rowId)]; 
              row['Image_Upload'] = null; // Just in case it's respected later
              
+             // If replacing, append the replacement image payload securely onto the fresh row
+             if (imageNeedsReplace && mark.attachmentImageEncryptedId) {
+               row['Image_Upload'] = [mark.attachmentImageEncryptedId];
+             }
+             
              // To ensure the new row doesn't trigger continuous deletions later,
              // clear the deletion flags from memory now.
              mark._imageExplicitlyDeleted = false;
              mark._deletedImageId = null; 
+             mark._imageNeedsCrmReplace = false;
           } else if (hasNewImage && mark.attachmentImageEncryptedId) {
             // Provide the uploaded file's encrypted ID directly to link it to this subform row
             row['Image_Upload'] = [mark.attachmentImageEncryptedId];
@@ -8572,7 +8578,13 @@
             pendingCommentAttachmentName = name;
             pendingCommentOriginalFile = originalFile;
             var mark = findMarkById(inlineCommentMarkId);
-            if (mark) { mark.attachmentImageUrl = null; mark.attachmentImageEncryptedId = null; mark._imageNeedsCrmReplace = true; mark.attachmentOriginalFile = originalFile; }
+            if (mark) { 
+               mark.attachmentImageUrl = null; 
+               mark.attachmentImageEncryptedId = null; 
+               mark._imageNeedsCrmReplace = true; 
+               mark.attachmentOriginalFile = originalFile;
+               if (mark.attachmentImages) mark.attachmentImages = [];
+            }
             updateAttachmentPreview(inlineCommentAttachmentPreview, inlineCommentAttachmentName, data, name, null, inlineCommentImageBtn);
           });
         });
@@ -8609,7 +8621,13 @@
             pendingCommentAttachmentName = name;
             pendingCommentOriginalFile = originalFile;
             var mark = findMarkById(inlineCommentMarkId || selectedMarkId);
-            if (mark) { mark.attachmentImageUrl = null; mark.attachmentImageEncryptedId = null; mark._imageNeedsCrmReplace = true; mark.attachmentOriginalFile = originalFile; }
+            if (mark) { 
+               mark.attachmentImageUrl = null; 
+               mark.attachmentImageEncryptedId = null; 
+               mark._imageNeedsCrmReplace = true; 
+               mark.attachmentOriginalFile = originalFile;
+               if (mark.attachmentImages) mark.attachmentImages = [];
+            }
             updateAttachmentPreview(commentAttachmentPreview, commentAttachmentName, data, name, null, commentImageBtn);
           });
         });
