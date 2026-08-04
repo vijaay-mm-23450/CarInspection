@@ -901,6 +901,8 @@
       left: 86px;
       z-index: 8;
       width: min(230px, calc(100% - 270px));
+      min-height: 250px;
+      height: auto;
       padding: 8px;
       background: rgba(255, 253, 249, 0.94);
       border: 1px solid var(--line);
@@ -908,6 +910,7 @@
       box-shadow: var(--toolbar-shadow);
       backdrop-filter: blur(12px);
       display: grid;
+      grid-template-rows: auto 1fr auto;
       gap: 7px;
     }
 
@@ -961,8 +964,8 @@
 
     .comment-card textarea {
       width: 100%;
-      min-height: 54px;
-      max-height: 120px;
+      min-height: 100px;
+      max-height: 200px;
       resize: vertical;
       border: 1px solid rgba(124, 92, 67, 0.14);
       border-radius: 11px;
@@ -972,8 +975,10 @@
       line-height: 1.35;
       background: rgba(255, 255, 255, 0.96);
       color: var(--text);
-      overflow: auto;
+      overflow-y: auto;
+      overflow-x: hidden;
       word-break: break-word;
+      box-sizing: border-box;
     }
 
     .comment-card-actions {
@@ -1266,17 +1271,18 @@
       position: absolute;
       z-index: 9;
       display: grid;
-      grid-template-rows: auto minmax(0, 1fr) auto;
+      grid-template-rows: auto 1fr auto;
       gap: var(--inline-editor-gap, 8px);
       min-width: 0;
-      min-height: 0;
+      min-height: 250px !important;
+      height: auto;
       padding: var(--inline-editor-padding, 10px);
       background: rgba(255, 253, 249, 0.98);
       border: 1px solid rgba(124, 92, 67, 0.18);
       border-radius: 12px;
       box-shadow: 0 18px 42px rgba(31, 41, 51, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.52) inset;
       backdrop-filter: blur(14px);
-      overflow: hidden;
+      overflow: visible;
     }
 
     .inline-comment-editor.is-hidden {
@@ -1316,13 +1322,13 @@
     .inline-comment-body {
       position: relative;
       min-width: 0;
-      min-height: 0;
+      min-height: 100px;
       padding: var(--inline-editor-body-padding, 9px 10px 10px 14px);
       border: 1px solid rgba(124, 92, 67, 0.14);
       border-radius: 9px;
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 249, 242, 0.96));
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
-      overflow: hidden;
+      overflow: auto;
     }
 
     .inline-comment-body::before {
@@ -1338,9 +1344,9 @@
 
     .inline-comment-editor textarea {
       width: 100%;
-      height: 100%;
+      height: auto;
       min-width: 0;
-      min-height: 0;
+      min-height: 100px;
       max-height: none;
       resize: none;
       border: 0;
@@ -1352,7 +1358,7 @@
       font-size: var(--inline-editor-text-size, 14px);
       font-weight: 560;
       line-height: var(--inline-editor-line-height, 1.5);
-      overflow: auto;
+      overflow-y: auto;
       word-break: break-word;
     }
 
@@ -2147,7 +2153,7 @@
       }
 
       .inline-comment-editor textarea {
-        min-height: 120px !important;
+        min-height: 100px !important;
         max-height: 35vh !important;
         font-size: 16px !important;
       }
@@ -3322,13 +3328,13 @@
           if (!mark.id) {
             mark.id = row.id ? 'mark-' + String(row.id).replace(/[^a-zA-Z0-9_-]/g, '-') : 'mark-' + nextMarkId++;
           }
-          // Restore images from CRM - if Image_Upload has data, clear the delete flag
-          if (row.Image_Upload && Array.isArray(row.Image_Upload) && row.Image_Upload.length > 0) {
+          // Restore images from CRM - if Upload_Image has data, clear the delete flag
+          if (row.Upload_Image && Array.isArray(row.Upload_Image) && row.Upload_Image.length > 0) {
             // If CRM has image data, the user didn't actually delete it (or it was re-added)
             mark._imageExplicitlyDeleted = false;
 
             // Support multiple images - store them all as an array
-            mark.attachmentImages = row.Image_Upload.map(function (img) {
+            mark.attachmentImages = row.Upload_Image.map(function (img) {
               var fileRef = extractFirstFileRef(img);
               return {
                 encryptedId: (fileRef && (fileRef.encryptedId || fileRef.fileId || fileRef.id)) || '',
@@ -3349,13 +3355,28 @@
               mark.attachmentImageData = null;
               console.log('[parseAnnotationData] Set attachmentImageEncryptedId:', mark.attachmentImageEncryptedId);
             }
-          } else if (row.Image_Upload === null || (Array.isArray(row.Image_Upload) && row.Image_Upload.length === 0)) {
+          } else if (row.Upload_Image === null || (Array.isArray(row.Upload_Image) && row.Upload_Image.length === 0)) {
             // CRM has no images - clear image properties
-            mark.attachmentImages = [];
-            mark.attachmentImageEncryptedId = null;
-            mark.attachmentImageUrl = null;
-            mark.attachmentImageName = '';
-            mark.attachmentImageData = null;
+            // BUT: Keep the encrypted ID if it was just uploaded (mark already has it in memory)
+            // This handles the case where CRM hasn't yet returned the image data after save
+            if (!mark.attachmentImageEncryptedId) {
+              mark.attachmentImages = [];
+              mark.attachmentImageEncryptedId = null;
+              mark.attachmentImageUrl = null;
+              mark.attachmentImageName = '';
+              mark.attachmentImageData = null;
+            } else {
+              // Keep the in-memory image data since CRM may not have returned it yet
+              console.log('[parseAnnotationData] Keeping in-memory encryptedId:', mark.attachmentImageEncryptedId);
+              if (!mark.attachmentImages || mark.attachmentImages.length === 0) {
+                mark.attachmentImages = [{
+                  encryptedId: mark.attachmentImageEncryptedId,
+                  fileId: '',
+                  downloadUrl: mark.attachmentImageUrl || '',
+                  fileName: mark.attachmentImageName || 'attachment.jpg'
+                }];
+              }
+            }
           }
           return mark.partId ? mark : null;
         } catch (error) {
@@ -3434,7 +3455,7 @@
         row[CRM_SUBFORM_ANNOTATION_DATA_FIELD] = JSON.stringify(serializeAnnotationData(mark));
 
         if (mark.attachmentImageEncryptedId) {
-          row['Image_Upload'] = [{
+          row['Upload_Image'] = [{
             Sequence_Number: 1,
             Encrypted_Id: mark.attachmentImageEncryptedId
           }];
@@ -3629,43 +3650,77 @@
 
           // Check if user explicitly removed the image
           var imageWasDeleted = mark._imageExplicitlyDeleted === true;
-          
-          // An image only genuinely needs replacing if the user actually swapped a CRM file out. 
-          // If the CRM attachment array is still intact, this absolutely confirms the image natively matches 
-          // the CRM's current state, meaning any replacement flags are 100% false positives.
-          var imageNeedsReplace = mark._imageNeedsCrmReplace === true && (!mark.attachmentImages || mark.attachmentImages.length === 0);
 
-          // Check if there's a NEW image to upload or a replacement queued for CRM.
-          var hasNewImage = Boolean(mark.attachmentImageEncryptedId) && (imageNeedsReplace || !rowId);
+          // Check if the image needs to be replaced.
+          // This happens when:
+          // 1. There's a new encrypted ID (user uploaded a new image)
+          // 2. The existing row has an image already (check both attachmentImages AND if row exists in CRM)
+          // 3. The new encrypted ID is different from the existing one
+          // 4. This is a pre-existing row that has been saved to CRM
+          
+          // Check if the mark has an existing image attached
+          var hasExistingImage = (mark.attachmentImages && mark.attachmentImages.length > 0) || Boolean(mark._deletedImageId);
+          var existingEncryptedId = hasExistingImage 
+            ? ((mark.attachmentImages && mark.attachmentImages.length > 0) ? mark.attachmentImages[0].encryptedId : mark._deletedImageId) 
+            : null;
+          var newEncryptedId = mark.attachmentImageEncryptedId;
+          
+          console.log('[DEBUG IMAGE CHECK]', {
+            rowId: rowId,
+            newEncryptedId: newEncryptedId,
+            hasExistingImage: hasExistingImage,
+            existingEncryptedId: existingEncryptedId,
+            'mark.attachmentImages': mark.attachmentImages,
+            'mark.attachmentImageEncryptedId': mark.attachmentImageEncryptedId
+          });
+          
+          // Image needs replacement when:
+          // 1. We have a new encrypted ID (new image uploaded)
+          // 2. The mark has an existing image in CRM (attachmentImages array is populated)
+          // 3. The new ID differs from the existing one
+          // 4. The row exists in CRM (has a rowId)
+          var imageNeedsReplace = Boolean(newEncryptedId) && 
+                                  hasExistingImage && 
+                                  newEncryptedId !== existingEncryptedId &&
+                                  rowId;
+
+          // Check if there's a NEW image to upload (adding image to a mark that had no image).
+          // A new image exists when:
+          // 1. We have an encrypted ID from upload
+          // 2. There's no existing image in CRM (attachmentImages array is empty)
+          // Note: We don't check imageNeedsReplace because that requires both new AND existing image
+          var hasNewImage = Boolean(newEncryptedId) && !hasExistingImage;
 
           if ((imageWasDeleted || imageNeedsReplace) && rowId) {
-             // ZOHO SUBFORM BUG WORKAROUND:
-             // Zoho entirely ignores or strips nulls/empty payloads meant to clear a file upload field.
-             // Best workaround: Destroy the entire affected subform line item and seamlessly clone it 
-             // without an image by omitting its ID so it recreates fresh.
-             var cloneDeleteRow = { id: String(rowId), _delete: true };
-             upsertRows.push(cloneDeleteRow);
-             
-             // Strip the ID from the current row so it's inserted completely anew
-             delete row.id;
-             delete keptRowIds[String(rowId)]; 
-             row['Image_Upload'] = null; // Just in case it's respected later
-             
-             // If replacing, append the replacement image payload securely onto the fresh row
-             if (imageNeedsReplace && mark.attachmentImageEncryptedId) {
-               row['Image_Upload'] = [mark.attachmentImageEncryptedId];
-             }
-             
-             // To ensure the new row doesn't trigger continuous deletions later,
-             // clear the deletion flags from memory now.
-             mark._imageExplicitlyDeleted = false;
-             mark._deletedImageId = null; 
-             mark._imageNeedsCrmReplace = false;
+            // ZOHO SUBFORM BUG WORKAROUND:
+            // Zoho entirely ignores or strips nulls/empty payloads meant to clear a file upload field.
+            // Best workaround: Destroy the entire affected subform line item and seamlessly clone it 
+            // without an image by omitting its ID so it recreates fresh.
+            var cloneDeleteRow = { id: String(rowId), _delete: true };
+            upsertRows.push(cloneDeleteRow);
+
+            // Strip the ID from the current row so it's inserted completely anew
+            delete row.id;
+            delete keptRowIds[String(rowId)];
+
+            // If replacing, append the replacement image payload securely onto the row
+            if (imageNeedsReplace && mark.attachmentImageEncryptedId) {
+              row['Upload_Image'] = [mark.attachmentImageEncryptedId];
+            } else {
+              // Deleting without replacement — no image on the row
+              row['Upload_Image'] = null;
+            }
+
+            // To ensure the new row doesn't trigger continuous deletions later,
+            // clear the deletion flags from memory now.
+            mark._imageExplicitlyDeleted = false;
+            mark._deletedImageId = null;
+            mark._imageNeedsCrmReplace = false;
           } else if (hasNewImage && mark.attachmentImageEncryptedId) {
             // Provide the uploaded file's encrypted ID directly to link it to this subform row
-            row['Image_Upload'] = [mark.attachmentImageEncryptedId];
+            row['Upload_Image'] = [mark.attachmentImageEncryptedId];
           }
-          
+
           // Neutralize legacy localStorage phantom flags
           delete mark._imageNeedsCrmReplace;
 
@@ -3770,7 +3825,7 @@
             return; // Can't clear image for a row that doesn't exist in CRM yet
           }
 
-          var fileId = mark._deletedImageId || (mark.attachmentImages && mark.attachmentImages.length > 0 
+          var fileId = mark._deletedImageId || (mark.attachmentImages && mark.attachmentImages.length > 0
             ? (mark.attachmentImages[0].fileId || mark.attachmentImages[0].encryptedId)
             : mark.attachmentImageEncryptedId);
 
@@ -3778,7 +3833,7 @@
             var row = {
               id: String(rowId)
             };
-            row['Image_Upload'] = [
+            row['Upload_Image'] = [
               {
                 id: String(fileId),
                 _delete: null
@@ -4228,7 +4283,7 @@
 
       function updateStatus(message, isAlert) {
         console.log("Status Message : ", message);
-        
+
         statusMessage.textContent = message || '';
         partBadge.classList.toggle('is-alert', Boolean(isAlert));
         defectBadge.classList.toggle('is-alert', Boolean(isAlert));
@@ -4449,7 +4504,7 @@
 
               // Mark the old image for deletion without clearing the mark data yet
               // (openCommentCard will handle setting up the pending attachment state)
-              mark._imageExplicitlyDeleted = true;  // Flag to delete from Image_Upload subform
+              mark._imageExplicitlyDeleted = true;  // Flag to delete from Upload_Image subform
 
               // Open comment card and trigger new image upload
               setSelectedMark(mark.id);
@@ -4480,16 +4535,16 @@
             deleteBtn.addEventListener('click', function (e) {
               e.stopPropagation();
               console.log("Mark Data : ", mark);
-              
+
 
               // Clear all image data
               mark.attachmentImageData = null;
               mark.attachmentImageName = '';
               mark.attachmentImageUrl = null;
               mark.attachmentImageEncryptedId = null;
-              // Flag to delete from Image_Upload subform
-              mark._imageExplicitlyDeleted = true;  
-              
+              // Flag to delete from Upload_Image subform
+              mark._imageExplicitlyDeleted = true;
+
               if (mark.attachmentImages && mark.attachmentImages.length > 0) {
                 mark._deletedImageId = mark.attachmentImages[0].fileId || mark.attachmentImages[0].encryptedId;
               } else if (mark.attachmentImageEncryptedId) {
@@ -4657,7 +4712,7 @@
         var availableWidth = Math.max(1, canvasRect.width - 8);
         var availableHeight = Math.max(1, canvasRect.height - 8);
         var width = clampNumber(layout.width * mapping.scale, 1, availableWidth);
-        var height = clampNumber(layout.height * mapping.scale, 1, availableHeight);
+        var height = clampNumber(layout.height, 1, availableHeight);
         var maxLeft = Math.max(0, canvasRect.width - width - 4);
         var maxTop = Math.max(0, canvasRect.height - height - 4);
 
@@ -4673,7 +4728,8 @@
         inlineCommentEditor.style.top = Number(clampNumber(top, 4, maxTop).toFixed(2)) + 'px';
         inlineCommentEditor.style.width = Number(width.toFixed(2)) + 'px';
         inlineCommentEditor.style.height = Number(height.toFixed(2)) + 'px';
-        inlineCommentEditor.style.minHeight = '0px';
+        // Ensure minimum height so action buttons remain visible
+        inlineCommentEditor.style.minHeight = '140px';
       }
 
       var pendingCommentAttachment = null;
@@ -4708,8 +4764,8 @@
           return null;
         }
 
-        var imageChanged = (mark.attachmentImageData || null) !== (pendingCommentAttachment || null) || 
-                           (mark.attachmentOriginalFile || null) !== (pendingCommentOriginalFile || null);
+        var imageChanged = (mark.attachmentImageData || null) !== (pendingCommentAttachment || null) ||
+          (mark.attachmentOriginalFile || null) !== (pendingCommentOriginalFile || null);
 
         mark.comment = normalizeCommentText(inlineCommentInput.value);
         inlineCommentInput.value = mark.comment;
@@ -4720,7 +4776,17 @@
         // Reset the deletion flag if a new image has been added or genuinely swapped
         if (pendingCommentAttachment && imageChanged) {
           mark._imageExplicitlyDeleted = false;
-          mark._imageNeedsCrmReplace = true;
+          // CRITICAL FIX: Include _deletedImageId since attachmentImages gets wiped during replace
+          var hadExistingCrmImage = (mark.attachmentImages && mark.attachmentImages.length > 0) || Boolean(mark._deletedImageId);
+          var hasBeenSavedToCrm = Boolean(mark.crmLineItemId);
+          if (hadExistingCrmImage && hasBeenSavedToCrm) {
+            mark._imageNeedsCrmReplace = true;
+          } else {
+            // CRITICAL: When uploading a completely NEW image (no existing CRM image),
+            // clear any stale crmLineItemId that might have persisted from localStorage.
+            mark.crmLineItemId = null;
+            delete mark._imageNeedsCrmReplace;
+          }
         }
 
         updateInlineCommentCount();
@@ -6326,7 +6392,7 @@
       function getDefaultCommentLayout(mark, bounds, center, textLength) {
         var limits = getCommentViewLimits();
         var width = clampNumber((Math.min(Math.max(textLength, 24), 58) * 2.7) + 32, 150, 212);
-        var height = 76;
+        var height = 110;
         var offset = 20;
         var x = center.x + offset;
         if (x + width > limits.maxX) {
@@ -8516,10 +8582,26 @@
       });
       clearCommentButton.addEventListener('click', clearSelectedMarkComment);
       closeCommentCardButton.addEventListener('click', hideCommentCard);
+      
+      // ── Auto-resize comment textarea based on content ──────────────────
+      function autoResizeCommentTextarea() {
+        if (!commentInput) { return; }
+        
+        // Reset height to min to get accurate scrollHeight
+        commentInput.style.height = '54px';
+        
+        // Calculate required height based on content
+        var scrollHeight = commentInput.scrollHeight;
+        var newHeight = Math.max(54, Math.min(200, scrollHeight));
+        
+        commentInput.style.height = newHeight + 'px';
+      }
+      
       commentInput.addEventListener('input', function () {
         if (commentInput.value.length > COMMENT_MAX_LENGTH) {
           commentInput.value = normalizeCommentText(commentInput.value);
         }
+        autoResizeCommentTextarea();
       });
       commentInput.addEventListener('keydown', function (event) {
         handleCommentEditorKeydown(event, function () {
@@ -8578,12 +8660,19 @@
             pendingCommentAttachmentName = name;
             pendingCommentOriginalFile = originalFile;
             var mark = findMarkById(inlineCommentMarkId);
-            if (mark) { 
-               mark.attachmentImageUrl = null; 
-               mark.attachmentImageEncryptedId = null; 
-               mark._imageNeedsCrmReplace = true; 
-               mark.attachmentOriginalFile = originalFile;
-               if (mark.attachmentImages) mark.attachmentImages = [];
+            if (mark) {
+              if (!mark._deletedImageId) {
+                if (mark.attachmentImages && mark.attachmentImages.length > 0) {
+                  mark._deletedImageId = mark.attachmentImages[0].fileId || mark.attachmentImages[0].encryptedId;
+                } else if (mark.attachmentImageEncryptedId) {
+                  mark._deletedImageId = mark.attachmentImageEncryptedId;
+                }
+              }
+              mark.attachmentImageUrl = null;
+              mark.attachmentImageEncryptedId = null;
+              mark._imageNeedsCrmReplace = true;
+              mark.attachmentOriginalFile = originalFile;
+              if (mark.attachmentImages) mark.attachmentImages = [];
             }
             updateAttachmentPreview(inlineCommentAttachmentPreview, inlineCommentAttachmentName, data, name, null, inlineCommentImageBtn);
           });
@@ -8621,12 +8710,19 @@
             pendingCommentAttachmentName = name;
             pendingCommentOriginalFile = originalFile;
             var mark = findMarkById(inlineCommentMarkId || selectedMarkId);
-            if (mark) { 
-               mark.attachmentImageUrl = null; 
-               mark.attachmentImageEncryptedId = null; 
-               mark._imageNeedsCrmReplace = true; 
-               mark.attachmentOriginalFile = originalFile;
-               if (mark.attachmentImages) mark.attachmentImages = [];
+            if (mark) {
+              if (!mark._deletedImageId) {
+                if (mark.attachmentImages && mark.attachmentImages.length > 0) {
+                  mark._deletedImageId = mark.attachmentImages[0].fileId || mark.attachmentImages[0].encryptedId;
+                } else if (mark.attachmentImageEncryptedId) {
+                  mark._deletedImageId = mark.attachmentImageEncryptedId;
+                }
+              }
+              mark.attachmentImageUrl = null;
+              mark.attachmentImageEncryptedId = null;
+              mark._imageNeedsCrmReplace = true;
+              mark.attachmentOriginalFile = originalFile;
+              if (mark.attachmentImages) mark.attachmentImages = [];
             }
             updateAttachmentPreview(commentAttachmentPreview, commentAttachmentName, data, name, null, commentImageBtn);
           });
@@ -9535,12 +9631,12 @@
           }).then(function (response) {
             var dataPayload = response && response.data ? response.data : response;
             var record = Array.isArray(dataPayload) ? dataPayload[0] : dataPayload;
-            var images = record ? record.Inspection_Image : null;
+            var images = record ? record.Issue_Image : null;
             if (hasMatchingImage(images)) {
               return true;
             }
             if (attempt >= maxAttempts) {
-              throw new Error('Inspection_Image did not persist after update.');
+              throw new Error('Issue_Image did not persist after update.');
             }
             return delay(450).then(function () {
               return check(attempt + 1);
@@ -9859,156 +9955,452 @@
             var imgDataUrl = canvas.toDataURL('image/png');
             var issueMarks = getAllMarks().filter(function (m) { return Boolean(m.category); });
 
-            // Build PDF using jsPDF (loaded from CDN)
-            function buildAndDownloadPdf(jsPDF) {
-              // ── Page setup ─────────────────────────────────────────────
-              var doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+            // Helper to preload images as base64
+            function loadImg(src) {
+              return new Promise(function(resolve) {
+                var img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = function() { 
+                  var cvs = document.createElement('canvas');
+                  cvs.width = img.width;
+                  cvs.height = img.height;
+                  var ctx = cvs.getContext('2d');
+                  ctx.drawImage(img, 0, 0);
+                  resolve({
+                    dataUrl: cvs.toDataURL('image/png'),
+                    width: img.width,
+                    height: img.height
+                  });
+                };
+                img.onerror = function() { resolve(null); }; // Fail gracefully
+                img.src = src;
+              });
+            }
+
+            var preloadPromises = [
+              loadImg('assets/Alain%20Logo.png'),
+              loadImg('assets/Koenigsegg%20Logo.png')
+            ];
+            
+            issueMarks.forEach(function(m) {
+              if (m.attachmentImageData) {
+                 preloadPromises.push(loadImg(m.attachmentImageData)); 
+              } else if (m.attachmentImageEncryptedId) {
+                 preloadPromises.push(
+                    fetchImageFromCrm(m.attachmentImageEncryptedId, m.crmLineItemId)
+                      .then(function(b64) {
+                         if (!b64) return null;
+                         m.attachmentImageData = b64; 
+                         return loadImg(b64);
+                      })
+                      .catch(function() { return null; })
+                 );
+              } else if (m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url)) {
+                 var localUrl = m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url);
+                 preloadPromises.push(loadImg(localUrl)); 
+              }
+            });
+
+            Promise.all(preloadPromises).then(function(loadedImages) {
+              var alainLogo = loadedImages[0];
+              var kgbLogo = loadedImages[1];
+              
+              var issueImgIdx = 2;
+              issueMarks.forEach(function(m) {
+                var hasImg = m.attachmentImageData || m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url) || m.attachmentImageEncryptedId;
+                if (hasImg) {
+                  m._preloadedImage = loadedImages[issueImgIdx++];
+                }
+              });
+
+              // Build PDF using jsPDF (loaded from CDN)
+              function buildAndDownloadPdf(jsPDF) {
+                var doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
               var pageW = doc.internal.pageSize.getWidth();
               var pageH = doc.internal.pageSize.getHeight();
-              var margin = 28;
-              var headerH = 60;
+              var margin = 40;
               var now = new Date();
+              var recordData = crmState.recordData || {};
 
-              // ── Shared header helper ────────────────────────────────────
-              function drawPageHeader(title) {
-                doc.setFillColor(244, 239, 230);
-                doc.rect(0, 0, pageW, headerH, 'F');
-
-                doc.setFontSize(20);
-                doc.setTextColor(31, 41, 51);
-                doc.setFont('helvetica', 'bold');
-                doc.text(title, margin, 38);
-
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(94, 108, 123);
-                doc.text('Generated: ' + now.toLocaleString(), pageW - margin, 38, { align: 'right' });
-                if (crmState.recordId) {
-                  doc.text('Record ID: ' + crmState.recordId, pageW - margin, 52, { align: 'right' });
+              function getFieldValue(value) {
+                if (value === null || value === undefined) return '';
+                if (typeof value === 'string') return value;
+                if (typeof value === 'number') return String(value);
+                if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+                if (typeof value === 'object') {
+                  if (value.name) return String(value.name);
+                  if (value.display_value) return String(value.display_value);
+                  return '';
                 }
-
-                doc.setDrawColor(182, 84, 47);
-                doc.setLineWidth(1.5);
-                doc.line(margin, headerH + 2, pageW - margin, headerH + 2);
+                return String(value);
               }
 
-              // ══════════════════════════════════════════════════════════
-              // PAGE 1 — Full-page car image
-              // ══════════════════════════════════════════════════════════
-              drawPageHeader('Car Inspection Report');
-
-              var imgTop = headerH + 10;
-              var availW = pageW - margin * 2;
-              var availH = pageH - imgTop - margin;
-
-              var canvasAspect = canvas.width / canvas.height;
-              var imgDrawW = availW;
-              var imgDrawH = availW / canvasAspect;
-              if (imgDrawH > availH) {
-                imgDrawH = availH;
-                imgDrawW = availH * canvasAspect;
+              // Custom Header Banner function
+              function drawHeaderBanner() {
+                // Draw left logo
+                if (alainLogo) {
+                  var aspect1 = alainLogo.width / alainLogo.height;
+                  var h1 = 36;
+                  var w1 = h1 * aspect1;
+                  doc.addImage(alainLogo.dataUrl, 'PNG', margin, 17, w1, h1);
+                }
+                
+                // Draw right logo
+                if (kgbLogo) {
+                  var aspect2 = kgbLogo.width / kgbLogo.height;
+                  var h2 = 36;
+                  var w2 = h2 * aspect2;
+                  doc.addImage(kgbLogo.dataUrl, 'PNG', pageW - margin - w2, 17, w2, h2);
+                }
               }
-              // Centre horizontally
-              var imgX = margin + (availW - imgDrawW) / 2;
 
-              doc.addImage(imgDataUrl, 'PNG', imgX, imgTop, imgDrawW, imgDrawH);
-
-              // ── Summary strip below the image ──────────────────────────
-              var annotatedParts = Object.keys(annotations).filter(function (p) {
-                return annotations[p] && annotations[p].marks && annotations[p].marks.length;
-              }).length;
-              var totalMarks = getAllMarks().length;
-
-              var summaryY = imgTop + imgDrawH + 8;
-              if (summaryY + 34 < pageH - 4) {
-                doc.setFillColor(255, 253, 249);
-                doc.setDrawColor(182, 84, 47);
-                doc.setLineWidth(0.8);
-                doc.roundedRect(imgX, summaryY, imgDrawW, 30, 4, 4, 'FD');
-
-                doc.setFontSize(9);
+              // Helper for section titles
+              function drawSectionTitle(title, y) {
+                doc.setFillColor(243, 244, 246); // Light gray #f3f4f6
+                doc.rect(margin, y - 16, pageW - margin * 2, 24, 'F');
+                doc.setTextColor(31, 41, 55);
+                doc.setFontSize(12);
                 doc.setFont('helvetica', 'bold');
-                doc.setTextColor(31, 41, 51);
-                var col = imgDrawW / 3;
-                doc.text('Issues: ' + issueMarks.length, imgX + col * 0 + 10, summaryY + 18);
-                doc.text('Parts Affected: ' + annotatedParts, imgX + col * 1 + 10, summaryY + 18);
+                doc.text(title, margin + 10, y);
+                return y + 16; // Return new yPos
+              }
+
+              // ══════════════════════════════════════════════════════════
+              // PAGE 1 — DELIVERY NOTE
+              // ══════════════════════════════════════════════════════════
+              drawHeaderBanner();
+              
+              var yPos = 90;
+              doc.setTextColor(31, 41, 55);
+              doc.setFontSize(22);
+              doc.setFont('helvetica', 'bold');
+              doc.text('DELIVERY NOTE', pageW / 2, yPos, { align: 'center' });
+              yPos += 30;
+              
+              // ── General Info ───────────────────────────────────────────
+              doc.setFontSize(10);
+              doc.setFont('helvetica', 'normal');
+              doc.setTextColor(75, 85, 99); // Gray #4b5563
+              var dateStr = now.toLocaleDateString();
+              var timeStr = now.toLocaleTimeString();
+              doc.text('Date: ' + dateStr, margin, yPos);
+              yPos += 18;
+              doc.text('Time: ' + timeStr, margin, yPos);
+              yPos += 18;
+              doc.text('Petrol Level: ' + getFieldValue(recordData.Petrol_Level), margin, yPos);
+              yPos += 30;
+
+              // ── Vehicle Details ────────────────────────────────────────
+              yPos = drawSectionTitle('VEHICLE DETAILS', yPos);
+              yPos += 15;
+              
+              var leftFields = [
+                { label: 'Make', value: getFieldValue(recordData.Make) },
+                { label: 'Exterior Colour', value: getFieldValue(recordData.Exterior_Color) },
+                { label: 'Mileage', value: getFieldValue(recordData.Mileage) }
+              ];
+              var rightFields = [
+                { label: 'Model', value: getFieldValue(recordData.Model) },
+                { label: 'Year Model', value: getFieldValue(recordData.Year_Model) },
+                { label: 'Interior Colour', value: getFieldValue(recordData.Interior_Color) }
+              ];
+
+              doc.setFontSize(10);
+              var detailsStartX = margin + 10;
+              var colWidth = (pageW - margin * 2) / 2;
+              
+              for (var i = 0; i < 3; i++) {
+                // Left
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(31, 41, 55);
+                doc.text(leftFields[i].label + ':', detailsStartX, yPos);
                 doc.setFont('helvetica', 'normal');
-                doc.text('Total Marks: ' + totalMarks, imgX + col * 2 + 10, summaryY + 18);
+                doc.setTextColor(75, 85, 99);
+                doc.text(leftFields[i].value, detailsStartX + 90, yPos);
+                
+                // Right
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(31, 41, 55);
+                doc.text(rightFields[i].label + ':', detailsStartX + colWidth, yPos);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(75, 85, 99);
+                doc.text(rightFields[i].value, detailsStartX + colWidth + 90, yPos);
+                
+                yPos += 20;
+              }
+              
+              doc.setFont('helvetica', 'bold');
+              doc.setTextColor(31, 41, 55);
+              doc.text('V.I.N Number:', detailsStartX, yPos);
+              doc.setFont('helvetica', 'normal');
+              doc.setTextColor(75, 85, 99);
+              doc.text(getFieldValue(recordData.VIN), detailsStartX + 90, yPos);
+              
+              yPos += 30;
+
+              // ── Vehicle Items ──────────────────────────────────────────
+              yPos = drawSectionTitle('VEHICLE ITEMS', yPos);
+              yPos += 20;
+              
+              var vehicleItems = [
+                { label: 'No. of Keys', value: recordData.Keys },
+                { label: 'Plates', value: recordData.Plate_Number },
+                { label: 'Reg. Card', value: recordData.Reg_Card },
+                { label: 'VCC', value: recordData.VCC },
+                { label: 'Export Cert/Hayaza', value: recordData.Export_Cert },
+                { label: 'Service Book', value: recordData.Service_Book },
+                { label: 'Manual Book', value: recordData.Manual_Book },
+                { label: 'Car Cover', value: recordData.Car_Cover },
+                { label: 'Car Charger', value: recordData.Charger },
+                { label: 'Fire Extinguisher', value: recordData.Fire_Extinguisher },
+                { label: 'Tool Kit', value: recordData.Tool_Kit },
+                { label: 'Other Items', value: recordData.Included_Items }
+              ];
+
+              doc.setFontSize(10);
+              var itemStartX = margin + 10;
+              var numItemCols = 2;
+              var itemsPerCol = Math.ceil(vehicleItems.length / numItemCols);
+              var itemColWidth = (pageW - margin * 2) / numItemCols;
+              
+              var col0Y = yPos;
+              var col1Y = yPos;
+              
+              // Helper to draw check or cross
+              function drawIcon(x, y, isCheck) {
+                var cy = y - 4; // Shift up 4 points to align with text baseline
+                doc.setLineWidth(1.5);
+                if (isCheck) {
+                  doc.setDrawColor(16, 185, 129); // Green
+                  // Draw tick
+                  doc.line(x, cy - 1, x + 3, cy + 2);
+                  doc.line(x + 3, cy + 2, x + 8, cy - 5);
+                } else {
+                  doc.setDrawColor(239, 68, 68); // Red
+                  // Draw X
+                  doc.line(x, cy - 4, x + 6, cy + 2);
+                  doc.line(x + 6, cy - 4, x, cy + 2);
+                }
+              }
+
+              for (var i = 0; i < vehicleItems.length; i++) {
+                var isCol0 = i < itemsPerCol;
+                var currentX = isCol0 ? itemStartX : itemStartX + itemColWidth;
+                var currentY = isCol0 ? col0Y : col1Y;
+                
+                var item = vehicleItems[i];
+                var rawVal = item.value;
+                
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(31, 41, 55);
+                doc.text(item.label + ':', currentX, currentY);
+                
+                var lblW = doc.getTextWidth(item.label + ': ');
+                var valX = currentX + Math.max(lblW + 8, 110);
+                
+                var isBoolean = typeof rawVal === 'boolean' || rawVal === 'Yes' || rawVal === 'No';
+                
+                if (isBoolean) {
+                  var isTrue = rawVal === true || rawVal === 'Yes';
+                  drawIcon(valX, currentY, isTrue);
+                  currentY += 16; // fixed step for booleans
+                } else {
+                  var displayVal = (rawVal === null || rawVal === undefined || rawVal === '') ? 'N/A' : String(rawVal);
+                  doc.setFont('helvetica', 'normal');
+                  doc.setTextColor(75, 85, 99);
+                  if (displayVal !== 'N/A') { 
+                    doc.setTextColor(31, 41, 55); 
+                  }
+                  
+                  // Wrap text
+                  var maxTextW = itemColWidth - (valX - currentX) - 10;
+                  var splitText = doc.splitTextToSize(displayVal, maxTextW);
+                  
+                  doc.text(splitText, valX, currentY);
+                  currentY += (splitText.length * 12) + 10;
+                }
+                
+                // Update tracker
+                if (isCol0) {
+                  col0Y = currentY;
+                } else {
+                  col1Y = currentY;
+                }
+              }
+              
+              yPos = Math.max(col0Y, col1Y) + 10;
+
+              // ── Inspection Image ───────────────────────────────────────
+              yPos = drawSectionTitle('VISUAL INSPECTION', yPos);
+              yPos += 15;
+              
+              var imgX = margin;
+              var imgMaxWidth = pageW - margin * 2;
+              var imgMaxHeight = pageH - yPos - margin - 45; // Fit remaining space on page, avoiding footer
+              
+              var canvasAspect = canvas.width / canvas.height;
+              var imgDrawW = imgMaxWidth;
+              var imgDrawH = imgMaxWidth / canvasAspect;
+              
+              if (imgDrawH > imgMaxHeight) {
+                if (imgMaxHeight > 100) { // Shrink to fit if reasonable space left
+                  imgDrawH = imgMaxHeight;
+                  imgDrawW = imgMaxHeight * canvasAspect;
+                  // Center image
+                  imgX = margin + (imgMaxWidth - imgDrawW) / 2;
+                } else {
+                  // Not enough space, move to next page
+                  doc.addPage();
+                  drawHeaderBanner();
+                  yPos = 90;
+                  doc.setTextColor(31, 41, 55);
+                  doc.setFontSize(22);
+                  doc.setFont('helvetica', 'bold');
+                  doc.text('VISUAL INSPECTION (Cont.)', pageW / 2, yPos, { align: 'center' });
+                  yPos += 15;
+                  imgMaxHeight = pageH - yPos - margin - 45;
+                  imgDrawW = imgMaxWidth;
+                  imgDrawH = imgMaxWidth / canvasAspect;
+                  if (imgDrawH > imgMaxHeight) {
+                    imgDrawH = imgMaxHeight;
+                    imgDrawW = imgMaxHeight * canvasAspect;
+                    imgX = margin + (imgMaxWidth - imgDrawW) / 2;
+                  }
+                }
+              } else {
+                 // Center image horizontally within max width
+                 imgX = margin + (imgMaxWidth - imgDrawW) / 2;
+              }
+              
+              if (imgDrawH > 0) {
+                // Add an elegant border around image
+                doc.setDrawColor(229, 231, 235); // #e5e7eb
+                doc.setLineWidth(2);
+                doc.rect(imgX - 4, yPos - 4, imgDrawW + 8, imgDrawH + 8);
+                doc.addImage(imgDataUrl, 'PNG', imgX, yPos, imgDrawW, imgDrawH);
               }
 
               // ══════════════════════════════════════════════════════════
               // PAGE 2 — Issue Log
               // ══════════════════════════════════════════════════════════
               doc.addPage();
-              drawPageHeader('Issue Log');
-
+              drawHeaderBanner();
+              
+              yPos = 90;
+              yPos = drawSectionTitle('ISSUE LOG', yPos);
+              yPos += 15;
+              
               var tableX = margin;
               var tableW = pageW - margin * 2;
-              var rowY = headerH + 20;
 
-              doc.setFontSize(13);
+              doc.setFontSize(12);
               doc.setFont('helvetica', 'bold');
-              doc.setTextColor(31, 41, 51);
-              doc.text('Issues (' + issueMarks.length + ')', tableX, rowY);
-              rowY += 12;
-
-              doc.setDrawColor(124, 92, 67);
-              doc.setLineWidth(0.5);
-              doc.line(tableX, rowY, tableX + tableW, rowY);
-              rowY += 12;
+              doc.setTextColor(31, 41, 55);
+              doc.text('Total Issues Found: ' + issueMarks.length, tableX, yPos);
+              yPos += 20;
 
               if (!issueMarks.length) {
                 doc.setFontSize(11);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(94, 108, 123);
-                doc.text('No issues logged.', tableX, rowY);
+                doc.setFont('helvetica', 'italic');
+                doc.setTextColor(107, 114, 128); // #6b7280
+                doc.text('No issues logged in this inspection.', tableX, yPos);
               } else {
-                issueMarks.forEach(function (mark) {
-                  // Estimated row height: title(13) + location(12) + note lines + separator(12)
+                issueMarks.forEach(function (mark, idx) {
+                  // Pre-calc height to handle pagination
                   var comment = normalizeCommentText(mark.comment) || 'No comment added.';
-                  var commentLines = doc.splitTextToSize('Note: ' + comment, tableW - 24);
-                  var rowH = 13 + 12 + commentLines.length * 12 + 16;
-
-                  if (rowY + rowH > pageH - margin) {
+                  var commentLines = doc.splitTextToSize(comment, tableW - 30);
+                  var rowH = 16 + 14 + commentLines.length * 12 + 10;
+                  
+                  var imgH = 0;
+                  var imgW = 0;
+                  if (mark._preloadedImage && mark._preloadedImage.dataUrl) {
+                    var aspect = mark._preloadedImage.width / mark._preloadedImage.height;
+                    imgW = 150; // Max width for issue image
+                    imgH = imgW / aspect;
+                    if (imgH > 100) { imgH = 100; imgW = imgH * aspect; } // Cap height
+                    rowH += imgH + 15;
+                  }
+                  
+                  if (yPos + rowH > pageH - margin - 40) {
                     doc.addPage();
-                    drawPageHeader('Issue Log (continued)');
-                    rowY = headerH + 20;
+                    drawHeaderBanner();
+                    yPos = 90;
+                    yPos = drawSectionTitle('ISSUE LOG (Cont.)', yPos);
+                    yPos += 15;
                   }
 
                   var config = getDefectConfig(mark.category);
                   var issueCode = getIssueCode(mark);
                   var colorRgb = hexToRgb(config.color || '#64748b');
 
-                  // Color badge circle
+                  // Draw issue box background
+                  doc.setFillColor(249, 250, 251); // #f9fafb
+                  doc.setDrawColor(229, 231, 235); // #e5e7eb
+                  doc.setLineWidth(1);
+                  doc.roundedRect(tableX, yPos, tableW, rowH - 4, 6, 6, 'FD');
+
+                  // Left color stripe
                   doc.setFillColor(colorRgb.r, colorRgb.g, colorRgb.b);
-                  doc.circle(tableX + 8, rowY - 3, 6, 'F');
+                  doc.roundedRect(tableX, yPos, 8, rowH - 4, 6, 6, 'F');
+                  // Square off right side of stripe
+                  doc.rect(tableX + 4, yPos, 4, rowH - 4, 'F');
 
-                  doc.setFontSize(7);
-                  doc.setFont('helvetica', 'bold');
-                  doc.setTextColor(255, 255, 255);
-                  doc.text(issueCode, tableX + 8, rowY - 0.5, { align: 'center' });
+                  var textX = tableX + 20;
+                  var textY = yPos + 18;
 
+                  // Issue Code & Category
                   doc.setFontSize(11);
                   doc.setFont('helvetica', 'bold');
-                  doc.setTextColor(colorRgb.r, colorRgb.g, colorRgb.b);
-                  doc.text(issueCode + ' — ' + mark.category, tableX + 20, rowY);
-                  rowY += 13;
-
+                  doc.setTextColor(31, 41, 55);
+                  doc.text(issueCode + ' — ' + mark.category, textX, textY);
+                  
+                  // Location badge/text (right aligned)
+                  doc.setFontSize(9);
+                  doc.setFont('helvetica', 'normal');
+                  doc.setTextColor(107, 114, 128);
+                  var locationText = 'Loc: ' + formatPartName(mark.partId || '');
+                  var locW = doc.getTextWidth(locationText);
+                  doc.text(locationText, tableX + tableW - locW - 10, textY);
+                  
+                  textY += 16;
+                  
+                  // Comment lines
                   doc.setFontSize(10);
                   doc.setFont('helvetica', 'normal');
-                  doc.setTextColor(31, 41, 51);
-                  doc.text('Location: ' + formatPartName(mark.partId || ''), tableX + 6, rowY);
-                  rowY += 12;
-
-                  doc.setTextColor(55, 65, 81);
-                  doc.text(commentLines, tableX + 6, rowY);
-                  rowY += commentLines.length * 12 + 4;
-
-                  doc.setDrawColor(200, 190, 180);
-                  doc.setLineWidth(0.3);
-                  doc.line(tableX, rowY, tableX + tableW, rowY);
-                  rowY += 10;
+                  doc.setTextColor(75, 85, 99);
+                  doc.text(commentLines, textX, textY);
+                  textY += commentLines.length * 12 + 6;
+                  
+                  // Draw image if exists
+                  if (mark._preloadedImage && mark._preloadedImage.dataUrl) {
+                    doc.setDrawColor(200, 200, 200);
+                    doc.setLineWidth(1);
+                    doc.rect(textX - 1, textY - 1, imgW + 2, imgH + 2);
+                    doc.addImage(mark._preloadedImage.dataUrl, 'PNG', textX, textY, imgW, imgH);
+                  }
+                  
+                  yPos += rowH + 6;
                 });
+              }
+
+              // Draw Footer on all pages
+              var totalPages = doc.internal.getNumberOfPages();
+              for (var i = 1; i <= totalPages; i++) {
+                doc.setPage(i);
+                var footerY = pageH - 40;
+                
+                // Slight top border for the footer
+                doc.setDrawColor(229, 231, 235); // #e5e7eb
+                doc.setLineWidth(1);
+                doc.line(margin, footerY - 15, pageW - margin, footerY - 15);
+                
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(156, 163, 175); // #9ca3af (Lighter gray simulating lower opacity)
+                
+                doc.text('Al Ain Class Motors, Sheikh Zayed Road, Dubai, United Arab Emirates', pageW / 2, footerY, { align: 'center' });
+                doc.text('TRN-100011508700003, P. O Box 294274, Tel. No. +971 4 3782222', pageW / 2, footerY + 12, { align: 'center' });
+                doc.text('Email: info@alainclass.com - Website: www.alainclass.com', pageW / 2, footerY + 24, { align: 'center' });
               }
 
               return doc;
@@ -10071,6 +10463,7 @@
               };
               document.head.appendChild(jsPdfScript);
             }
+          }); // Close Promise.all().then
           }).catch(function (err) {
             updateStatus('Failed to generate report: ' + (err && err.message ? err.message : String(err)), true);
           });
