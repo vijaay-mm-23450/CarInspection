@@ -2532,6 +2532,15 @@
               <polyline points="21 15 16 10 5 21"></polyline>
             </svg>
           </button>
+          <button class="tool-button sign-button" id="sendForSignButton" data-tooltip="Send for Sign" type="button"
+            title="Send for Sign" aria-label="Send for Sign">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <path d="M9 15h6"></path>
+              <path d="M12 18v-6"></path>
+            </svg>
+          </button>
         </div>
 
         <div class="floating-status" aria-live="polite">
@@ -3893,6 +3902,8 @@
           Entity: crmState.moduleName || CRM_MODULE_API_NAME,
           RecordID: crmState.recordId
         }).then(function (response) {
+          // Handle response.data - extract single record object
+          // response.data can be an array (old SDK) or object (new SDK)
           var dataPayload = response && response.data ? response.data : response;
           var record = Array.isArray(dataPayload) ? dataPayload[0] : dataPayload;
           crmState.recordData = record;
@@ -8271,22 +8282,46 @@
       function resetAll() {
         cancelDrawingSession();
         var removedMarks = getAllMarks();
-        var removedPartIds = Object.keys(annotations || {});
-        queueCrmLineItemDeletesFromMarks(removedMarks);
-        removedPartIds.forEach(function (partId) {
-          queueCrmLineItemDeletesForPart(partId);
-        });
+        
+        // Close comment editor and clear session tracking for removed marks
         closeCommentEditorForDeletedMarks(removedMarks);
         removeSessionMarkTrackingByIds(removedMarks.map(function (mark) {
           return mark.id;
         }));
-        removedPartIds.forEach(markPartDeleted);
+        
+        // Clear local annotations state
         annotations = {};
         nextMarkId = 1;
         clearEditor();
         renderOverlayMarks();
         updateStatus('');
         markDirty();
+        
+        // Clear subform in CRM by setting it to an empty array
+        var zoho = getZohoSdk();
+        if (zoho && crmState.recordId) {
+          var subformApiName = getActiveSubformApiName(crmState.recordData);
+          var updateData = {
+            id: crmState.recordId
+          };
+          updateData[subformApiName] = [];
+          
+          zoho.CRM.API.updateRecord({
+            Entity: crmState.moduleName || 'Deals',
+            APIData: updateData,
+            Trigger: []
+          }).then(function (response) {
+            // Clear the local subform cache after successful update
+            crmState.subformRows = [];
+            crmState.pendingDeleteRowIds = [];
+            crmState.pendingDeleteMarkIds = [];
+            clearDirty(); // Clear dirty state to hide Save/Cancel buttons
+            updateStatus('All inspection data cleared successfully.');
+          }).catch(function (err) {
+            console.error('Failed to clear subform in CRM:', err);
+            updateStatus('Local data cleared, but failed to clear CRM subform.', true);
+          });
+        }
       }
 
       function attachSvgBehavior() {
@@ -8365,6 +8400,14 @@
 
           // Close any open editor first so the latest comment is captured.
           saveAndCloseInlineCommentEditor();
+
+          // Check if all annotations have been deleted
+          var allMarksBeforeSave = getAllMarks();
+          if (allMarksBeforeSave.length === 0) {
+            // No annotations left, use resetAll to clear the subform properly
+            resetAll();
+            return;
+          }
 
           // Resolve any pending mark-delete IDs against the known subform rows
           // so that pendingDeleteRowIds is as complete as possible before we build
@@ -9629,8 +9672,14 @@
             Entity: entityName,
             RecordID: crmState.recordId
           }).then(function (response) {
+            // Handle response.data which should be a single record object (not an array)
+            // New SDK versions return the object directly
             var dataPayload = response && response.data ? response.data : response;
-            var record = Array.isArray(dataPayload) ? dataPayload[0] : dataPayload;
+            var record = dataPayload;
+            // Fallback for older SDK versions that may still return arrays
+            if (Array.isArray(record) && record.length > 0) {
+              record = record[0];
+            }
             var images = record ? record.Issue_Image : null;
             if (hasMatchingImage(images)) {
               return true;
@@ -10470,6 +10519,548 @@
         });
       }
       // ── End Generate Report / Save Image ──────────────────────────────
+
+      // ── Send for Sign Button ──────────────────────────────────────────
+      var sendForSignButton = document.getElementById('sendForSignButton');
+
+      if (sendForSignButton) {
+        sendForSignButton.addEventListener('click', function () {
+          updateStatus('Preparing document for signature...');
+          
+          captureInspectionCanvasReliable().then(function (canvas) {
+            var imgDataUrl = canvas.toDataURL('image/png');
+            var issueMarks = getAllMarks().filter(function (m) { return Boolean(m.category); });
+
+            // Helper to preload images as base64
+            function loadImg(src) {
+              return new Promise(function(resolve) {
+                var img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = function() { 
+                  var cvs = document.createElement('canvas');
+                  cvs.width = img.width;
+                  cvs.height = img.height;
+                  var ctx = cvs.getContext('2d');
+                  ctx.drawImage(img, 0, 0);
+                  resolve({
+                    dataUrl: cvs.toDataURL('image/png'),
+                    width: img.width,
+                    height: img.height
+                  });
+                };
+                img.onerror = function() { resolve(null); };
+                img.src = src;
+              });
+            }
+
+            var preloadPromises = [
+              loadImg('assets/Alain_Logo.png'),
+              loadImg('assets/Koenigsegg_Logo.png')
+            ];
+            
+            issueMarks.forEach(function(m) {
+              if (m.attachmentImageData) {
+                 preloadPromises.push(loadImg(m.attachmentImageData)); 
+              } else if (m.attachmentImageEncryptedId) {
+                 preloadPromises.push(
+                    fetchImageFromCrm(m.attachmentImageEncryptedId, m.crmLineItemId)
+                      .then(function(b64) {
+                         if (!b64) return null;
+                         m.attachmentImageData = b64; 
+                         return loadImg(b64);
+                      })
+                      .catch(function() { return null; })
+                 );
+              } else if (m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url)) {
+                 var localUrl = m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url);
+                 preloadPromises.push(loadImg(localUrl)); 
+              }
+            });
+
+            Promise.all(preloadPromises).then(function(loadedImages) {
+              var alainLogo = loadedImages[0];
+              var kgbLogo = loadedImages[1];
+              
+              var issueImgIdx = 2;
+              issueMarks.forEach(function(m) {
+                var hasImg = m.attachmentImageData || m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url) || m.attachmentImageEncryptedId;
+                if (hasImg) {
+                  m._preloadedImage = loadedImages[issueImgIdx++];
+                }
+              });
+
+              // Build PDF using jsPDF (reuse the same logic from Generate Report)
+              function buildPdfForSign(jsPDF) {
+                var doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+                var pageW = doc.internal.pageSize.getWidth();
+                var pageH = doc.internal.pageSize.getHeight();
+                var margin = 40;
+                var now = new Date();
+                var recordData = crmState.recordData || {};
+
+                function getFieldValue(value) {
+                  if (value === null || value === undefined) return '';
+                  if (typeof value === 'string') return value;
+                  if (typeof value === 'number') return String(value);
+                  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+                  if (typeof value === 'object') {
+                    if (value.name) return String(value.name);
+                    if (value.display_value) return String(value.display_value);
+                    return '';
+                  }
+                  return String(value);
+                }
+
+                function drawHeaderBanner() {
+                  if (alainLogo) {
+                    var aspect1 = alainLogo.width / alainLogo.height;
+                    var h1 = 36;
+                    var w1 = h1 * aspect1;
+                    doc.addImage(alainLogo.dataUrl, 'PNG', margin, 17, w1, h1);
+                  }
+                  if (kgbLogo) {
+                    var aspect2 = kgbLogo.width / kgbLogo.height;
+                    var h2 = 36;
+                    var w2 = h2 * aspect2;
+                    doc.addImage(kgbLogo.dataUrl, 'PNG', pageW - margin - w2, 17, w2, h2);
+                  }
+                }
+
+                function drawSectionTitle(title, y) {
+                  doc.setFillColor(243, 244, 246);
+                  doc.rect(margin, y - 16, pageW - margin * 2, 24, 'F');
+                  doc.setTextColor(31, 41, 55);
+                  doc.setFontSize(12);
+                  doc.setFont('helvetica', 'bold');
+                  doc.text(title, margin + 10, y);
+                  return y + 16;
+                }
+
+                // Page 1 - Delivery Note
+                drawHeaderBanner();
+                
+                var yPos = 90;
+                doc.setTextColor(31, 41, 55);
+                doc.setFontSize(22);
+                doc.setFont('helvetica', 'bold');
+                doc.text('DELIVERY NOTE', pageW / 2, yPos, { align: 'center' });
+                yPos += 30;
+                
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(75, 85, 99);
+                var dateStr = now.toLocaleDateString();
+                var timeStr = now.toLocaleTimeString();
+                doc.text('Date: ' + dateStr, margin, yPos);
+                yPos += 18;
+                doc.text('Time: ' + timeStr, margin, yPos);
+                yPos += 18;
+                doc.text('Petrol Level: ' + getFieldValue(recordData.Petrol_Level), margin, yPos);
+                yPos += 30;
+
+                yPos = drawSectionTitle('VEHICLE DETAILS', yPos);
+                yPos += 15;
+                
+                var leftFields = [
+                  { label: 'Make', value: getFieldValue(recordData.Make) },
+                  { label: 'Exterior Colour', value: getFieldValue(recordData.Exterior_Color) },
+                  { label: 'Mileage', value: getFieldValue(recordData.Mileage) }
+                ];
+                var rightFields = [
+                  { label: 'Model', value: getFieldValue(recordData.Model) },
+                  { label: 'Year Model', value: getFieldValue(recordData.Year_Model) },
+                  { label: 'Interior Colour', value: getFieldValue(recordData.Interior_Color) }
+                ];
+
+                doc.setFontSize(10);
+                var detailsStartX = margin + 10;
+                var colWidth = (pageW - margin * 2) / 2;
+                
+                for (var i = 0; i < 3; i++) {
+                  doc.setFont('helvetica', 'bold');
+                  doc.setTextColor(31, 41, 55);
+                  doc.text(leftFields[i].label + ':', detailsStartX, yPos);
+                  doc.setFont('helvetica', 'normal');
+                  doc.setTextColor(75, 85, 99);
+                  doc.text(leftFields[i].value, detailsStartX + 90, yPos);
+                  
+                  doc.setFont('helvetica', 'bold');
+                  doc.setTextColor(31, 41, 55);
+                  doc.text(rightFields[i].label + ':', detailsStartX + colWidth, yPos);
+                  doc.setFont('helvetica', 'normal');
+                  doc.setTextColor(75, 85, 99);
+                  doc.text(rightFields[i].value, detailsStartX + colWidth + 90, yPos);
+                  
+                  yPos += 20;
+                }
+                
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(31, 41, 55);
+                doc.text('V.I.N Number:', detailsStartX, yPos);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(75, 85, 99);
+                doc.text(getFieldValue(recordData.VIN), detailsStartX + 90, yPos);
+                
+                yPos += 30;
+
+                yPos = drawSectionTitle('VEHICLE ITEMS', yPos);
+                yPos += 20;
+                
+                var vehicleItems = [
+                  { label: 'No. of Keys', value: recordData.Keys },
+                  { label: 'Plates', value: recordData.Plate_Number },
+                  { label: 'Reg. Card', value: recordData.Reg_Card },
+                  { label: 'VCC', value: recordData.VCC },
+                  { label: 'Export Cert/Hayaza', value: recordData.Export_Cert },
+                  { label: 'Service Book', value: recordData.Service_Book },
+                  { label: 'Manual Book', value: recordData.Manual_Book },
+                  { label: 'Car Cover', value: recordData.Car_Cover },
+                  { label: 'Car Charger', value: recordData.Charger },
+                  { label: 'Fire Extinguisher', value: recordData.Fire_Extinguisher },
+                  { label: 'Tool Kit', value: recordData.Tool_Kit },
+                  { label: 'Other Items', value: recordData.Included_Items }
+                ];
+
+                doc.setFontSize(10);
+                var itemStartX = margin + 10;
+                var numItemCols = 2;
+                var itemsPerCol = Math.ceil(vehicleItems.length / numItemCols);
+                var itemColWidth = (pageW - margin * 2) / numItemCols;
+                
+                var col0Y = yPos;
+                var col1Y = yPos;
+                
+                function drawIcon(x, y, isCheck) {
+                  var cy = y - 4;
+                  doc.setLineWidth(1.5);
+                  if (isCheck) {
+                    doc.setDrawColor(16, 185, 129);
+                    doc.line(x, cy - 1, x + 3, cy + 2);
+                    doc.line(x + 3, cy + 2, x + 8, cy - 5);
+                  } else {
+                    doc.setDrawColor(239, 68, 68);
+                    doc.line(x, cy - 4, x + 6, cy + 2);
+                    doc.line(x + 6, cy - 4, x, cy + 2);
+                  }
+                }
+
+                for (var i = 0; i < vehicleItems.length; i++) {
+                  var isCol0 = i < itemsPerCol;
+                  var currentX = isCol0 ? itemStartX : itemStartX + itemColWidth;
+                  var currentY = isCol0 ? col0Y : col1Y;
+                  
+                  var item = vehicleItems[i];
+                  var rawVal = item.value;
+                  
+                  doc.setFont('helvetica', 'bold');
+                  doc.setTextColor(31, 41, 55);
+                  doc.text(item.label + ':', currentX, currentY);
+                  
+                  var lblW = doc.getTextWidth(item.label + ': ');
+                  var valX = currentX + Math.max(lblW + 8, 110);
+                  
+                  var isBoolean = typeof rawVal === 'boolean' || rawVal === 'Yes' || rawVal === 'No';
+                  
+                  if (isBoolean) {
+                    var isTrue = rawVal === true || rawVal === 'Yes';
+                    drawIcon(valX, currentY, isTrue);
+                    currentY += 16;
+                  } else {
+                    var displayVal = (rawVal === null || rawVal === undefined || rawVal === '') ? 'N/A' : String(rawVal);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(75, 85, 99);
+                    if (displayVal !== 'N/A') { 
+                      doc.setTextColor(31, 41, 55); 
+                    }
+                    
+                    var maxTextW = itemColWidth - (valX - currentX) - 10;
+                    var splitText = doc.splitTextToSize(displayVal, maxTextW);
+                    
+                    doc.text(splitText, valX, currentY);
+                    currentY += (splitText.length * 12) + 10;
+                  }
+                  
+                  if (isCol0) {
+                    col0Y = currentY;
+                  } else {
+                    col1Y = currentY;
+                  }
+                }
+                
+                yPos = Math.max(col0Y, col1Y) + 10;
+
+                yPos = drawSectionTitle('VISUAL INSPECTION', yPos);
+                yPos += 15;
+                
+                var imgX = margin;
+                var imgMaxWidth = pageW - margin * 2;
+                var imgMaxHeight = pageH - yPos - margin - 45;
+                
+                var canvasAspect = canvas.width / canvas.height;
+                var imgDrawW = imgMaxWidth;
+                var imgDrawH = imgMaxWidth / canvasAspect;
+                
+                if (imgDrawH > imgMaxHeight) {
+                  if (imgMaxHeight > 100) {
+                    imgDrawH = imgMaxHeight;
+                    imgDrawW = imgMaxHeight * canvasAspect;
+                    imgX = margin + (imgMaxWidth - imgDrawW) / 2;
+                  } else {
+                    doc.addPage();
+                    drawHeaderBanner();
+                    yPos = 90;
+                    doc.setTextColor(31, 41, 55);
+                    doc.setFontSize(22);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('VISUAL INSPECTION (Cont.)', pageW / 2, yPos, { align: 'center' });
+                    yPos += 15;
+                    imgMaxHeight = pageH - yPos - margin - 45;
+                    imgDrawW = imgMaxWidth;
+                    imgDrawH = imgMaxWidth / canvasAspect;
+                    if (imgDrawH > imgMaxHeight) {
+                      imgDrawH = imgMaxHeight;
+                      imgDrawW = imgMaxHeight * canvasAspect;
+                      imgX = margin + (imgMaxWidth - imgDrawW) / 2;
+                    }
+                  }
+                } else {
+                   imgX = margin + (imgMaxWidth - imgDrawW) / 2;
+                }
+                
+                if (imgDrawH > 0) {
+                  doc.setDrawColor(229, 231, 235);
+                  doc.setLineWidth(2);
+                  doc.rect(imgX - 4, yPos - 4, imgDrawW + 8, imgDrawH + 8);
+                  doc.addImage(imgDataUrl, 'PNG', imgX, yPos, imgDrawW, imgDrawH);
+                }
+
+                // Page 2 - Issue Log
+                doc.addPage();
+                drawHeaderBanner();
+                
+                yPos = 90;
+                yPos = drawSectionTitle('ISSUE LOG', yPos);
+                yPos += 15;
+                
+                var tableX = margin;
+                var tableW = pageW - margin * 2;
+
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(31, 41, 55);
+                doc.text('Total Issues Found: ' + issueMarks.length, tableX, yPos);
+                yPos += 20;
+
+                if (!issueMarks.length) {
+                  doc.setFontSize(11);
+                  doc.setFont('helvetica', 'italic');
+                  doc.setTextColor(107, 114, 128);
+                  doc.text('No issues logged in this inspection.', tableX, yPos);
+                } else {
+                  issueMarks.forEach(function (mark, idx) {
+                    var comment = normalizeCommentText(mark.comment) || 'No comment added.';
+                    var commentLines = doc.splitTextToSize(comment, tableW - 30);
+                    var rowH = 16 + 14 + commentLines.length * 12 + 10;
+                    
+                    var imgH = 0;
+                    var imgW = 0;
+                    if (mark._preloadedImage && mark._preloadedImage.dataUrl) {
+                      var aspect = mark._preloadedImage.width / mark._preloadedImage.height;
+                      imgW = 150;
+                      imgH = imgW / aspect;
+                      if (imgH > 100) { imgH = 100; imgW = imgH * aspect; }
+                      rowH += imgH + 15;
+                    }
+                    
+                    if (yPos + rowH > pageH - margin - 40) {
+                      doc.addPage();
+                      drawHeaderBanner();
+                      yPos = 90;
+                      yPos = drawSectionTitle('ISSUE LOG (Cont.)', yPos);
+                      yPos += 15;
+                    }
+
+                    var config = getDefectConfig(mark.category);
+                    var issueCode = getIssueCode(mark);
+                    var colorRgb = hexToRgb(config.color || '#64748b');
+
+                    doc.setFillColor(249, 250, 251);
+                    doc.setDrawColor(229, 231, 235);
+                    doc.setLineWidth(1);
+                    doc.roundedRect(tableX, yPos, tableW, rowH - 4, 6, 6, 'FD');
+
+                    doc.setFillColor(colorRgb.r, colorRgb.g, colorRgb.b);
+                    doc.roundedRect(tableX, yPos, 8, rowH - 4, 6, 6, 'F');
+                    doc.rect(tableX + 4, yPos, 4, rowH - 4, 'F');
+
+                    var textX = tableX + 20;
+                    var textY = yPos + 18;
+
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(31, 41, 55);
+                    doc.text(issueCode + ' — ' + mark.category, textX, textY);
+                    
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(107, 114, 128);
+                    var locationText = 'Loc: ' + formatPartName(mark.partId || '');
+                    var locW = doc.getTextWidth(locationText);
+                    doc.text(locationText, tableX + tableW - locW - 10, textY);
+                    
+                    textY += 16;
+                    
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(75, 85, 99);
+                    doc.text(commentLines, textX, textY);
+                    textY += commentLines.length * 12 + 6;
+                    
+                    if (mark._preloadedImage && mark._preloadedImage.dataUrl) {
+                      doc.setDrawColor(200, 200, 200);
+                      doc.setLineWidth(1);
+                      doc.rect(textX - 1, textY - 1, imgW + 2, imgH + 2);
+                      doc.addImage(mark._preloadedImage.dataUrl, 'PNG', textX, textY, imgW, imgH);
+                    }
+                    
+                    yPos += rowH + 6;
+                  });
+                }
+
+                // Footer on all pages
+                var totalPages = doc.internal.getNumberOfPages();
+                for (var i = 1; i <= totalPages; i++) {
+                  doc.setPage(i);
+                  var footerY = pageH - 40;
+                  
+                  doc.setDrawColor(229, 231, 235);
+                  doc.setLineWidth(1);
+                  doc.line(margin, footerY - 15, pageW - margin, footerY - 15);
+                  
+                  doc.setFontSize(9);
+                  doc.setFont('helvetica', 'normal');
+                  doc.setTextColor(156, 163, 175);
+                  
+                  doc.text('Al Ain Class Motors, Sheikh Zayed Road, Dubai, United Arab Emirates', pageW / 2, footerY, { align: 'center' });
+                  doc.text('TRN-100011508700003, P. O Box 294274, Tel. No. +971 4 3782222', pageW / 2, footerY + 12, { align: 'center' });
+                  doc.text('Email: info@alainclass.com - Website: www.alainclass.com', pageW / 2, footerY + 24, { align: 'center' });
+                }
+
+                return doc;
+              }
+
+              function hexToRgb(hex) {
+                var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? {
+                  r: parseInt(result[1], 16),
+                  g: parseInt(result[2], 16),
+                  b: parseInt(result[3], 16)
+                } : { r: 100, g: 116, b: 139 };
+              }
+
+              function sendPdfToZohoSign(doc) {
+                updateStatus('Uploading to Zoho Sign...');
+
+                var zoho = getZohoSdk();
+                if (!zoho || !crmState.recordId) {
+                  updateStatus('CRM connection required for signing.', true);
+                  return;
+                }
+
+                if (!zoho.CRM || !zoho.CRM.API || typeof zoho.CRM.API.attachFile !== 'function') {
+                  updateStatus('CRM file attachment API is not available for signature sending.', true);
+                  return;
+                }
+
+                if (!zoho.CRM.CONNECTOR || typeof zoho.CRM.CONNECTOR.invokeAPI !== 'function') {
+                  updateStatus('Zoho Sign connector is not configured in this CRM session.', true);
+                  return;
+                }
+
+                var pdfBlob = doc.output('blob');
+                var pdfName = 'inspection-report-for-sign-' + (crmState.recordId || 'report') + '.pdf';
+
+                // Get recipient details from CRM record
+                var recipientEmail = crmState.recordData.Email || crmState.recordData.email || crmState.recordData.Email_Address || '';
+                var recipientName = crmState.recordData.Name || crmState.recordData.Full_Name || crmState.recordData.First_Name || 'Customer';
+
+                if (!recipientEmail) {
+                  updateStatus('No recipient email found in CRM record. Please add an email address before sending for signature.', true);
+                  return;
+                }
+
+                // First, attach the PDF to CRM record
+                zoho.CRM.API.attachFile({
+                  Entity: crmState.moduleName || CRM_MODULE_API_NAME,
+                  RecordID: crmState.recordId,
+                  File: { Name: pdfName, Content: pdfBlob }
+                }).then(function () {
+                  updateStatus('PDF attached to CRM. Creating signature request...');
+
+                  // Create Zoho Sign request
+                  var signRequest = {
+                    request_name: 'Vehicle Inspection Report - ' + (crmState.recordData.VIN || crmState.recordId),
+                    actions: [{
+                      recipient_email: recipientEmail,
+                      recipient_name: recipientName,
+                      action_type: 'SIGN',
+                      private_notes: 'Please review and sign the vehicle inspection report.',
+                      signing_order: 1
+                    }],
+                    notes: 'Vehicle inspection report for ' + (crmState.recordData.VIN || 'vehicle'),
+                    expiration_days: 30
+                  };
+
+                  return zoho.CRM.CONNECTOR.invokeAPI(
+                    'zoho.sign.create_request',
+                    signRequest
+                  );
+                }).then(function (signResponse) {
+                  updateStatus('Document sent for signature successfully!');
+                  console.log('[Send for Sign] Sign request created:', signResponse);
+                }).catch(function (err) {
+                  crmState.lastError = err && err.message ? err.message : String(err || '');
+                  console.error('[Send for Sign] Error:', crmState.lastError);
+
+                  if (err && err.message && err.message.indexOf('CONNECTOR') > -1) {
+                    updateStatus('PDF attached to CRM. Zoho Sign connector is not configured or the request failed. Please set up Zoho Sign integration.', true);
+                  } else {
+                    updateStatus('Failed to send for signature: ' + crmState.lastError + '. PDF has been attached to CRM record.', true);
+                  }
+                });
+              }
+
+              // Load jsPDF and build/send PDF
+              if (window.jspdf && window.jspdf.jsPDF) {
+                var doc = buildPdfForSign(window.jspdf.jsPDF);
+                sendPdfToZohoSign(doc);
+              } else if (window.jsPDF) {
+                var doc = buildPdfForSign(window.jsPDF);
+                sendPdfToZohoSign(doc);
+              } else {
+                var jsPdfScript = document.createElement('script');
+                jsPdfScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                jsPdfScript.onload = function () {
+                  var JsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+                  if (!JsPDF) {
+                    updateStatus('Could not load PDF library. Please check your network connection.', true);
+                    return;
+                  }
+                  var doc = buildPdfForSign(JsPDF);
+                  sendPdfToZohoSign(doc);
+                };
+                jsPdfScript.onerror = function () {
+                  updateStatus('Failed to load PDF library. Check network connection.', true);
+                };
+                document.head.appendChild(jsPdfScript);
+              }
+            }); // Close Promise.all().then
+          }).catch(function (err) {
+            updateStatus('Failed to prepare document for signature: ' + (err && err.message ? err.message : String(err)), true);
+          });
+        });
+      }
+      // ── End Send for Sign Button ──────────────────────────────────────
 
       // ── Mobile drawer & legend toggle ─────────────────────────────────
       (function () {
