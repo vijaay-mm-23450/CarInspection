@@ -561,6 +561,107 @@
       border-color: #b91c1c;
     }
 
+    .sign-details-modal {
+      width: min(540px, calc(100vw - 24px));
+      padding: 20px 20px 18px;
+    }
+
+    .sign-details-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+
+    .sign-details-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .sign-details-subtitle {
+      margin: 0 0 10px;
+      color: #475569;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .sign-details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 6px;
+    }
+
+    .sign-details-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sign-details-group h3 {
+      margin: 0;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #475569;
+      font-weight: 800;
+    }
+
+    .sign-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sign-field label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #374151;
+    }
+
+    .sign-field input {
+      width: 100%;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 0 12px;
+      font: inherit;
+      color: #111827;
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .sign-field input:focus {
+      border-color: rgba(59, 130, 246, 0.8);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+    }
+
+    .sign-details-error {
+      min-height: 18px;
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #dc2626;
+    }
+
+    .sign-details-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 560px) {
+      .sign-details-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     /* Save / Cancel buttons — only visible when there are unsaved changes */
     .tool-button.save-button {
       background: rgba(34, 197, 94, 0.14);
@@ -2703,6 +2804,68 @@
         <!-- Defect chips injected by JS -->
       </div>
       <div class="mobile-part-modal-status" id="mobilePartModalStatus">Tap to annotate this part</div>
+    </div>
+  </div>
+
+  <div class="custom-modal-backdrop" id="signDetailsModal" style="display:none;" aria-modal="true" role="dialog"
+    aria-label="Signature contact details">
+    <div class="custom-modal sign-details-modal">
+      <div class="sign-details-header">
+        <div class="custom-modal-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <path d="M9 15h6"></path>
+            <path d="M12 18v-6"></path>
+          </svg>
+        </div>
+        <button type="button" class="custom-modal-btn" id="closeSignDetailsModal" aria-label="Close signature details">Close</button>
+      </div>
+      <h2 class="sign-details-title">Send for Signature</h2>
+      <p class="sign-details-subtitle">Enter the handover and receiving details before sending the inspection report to Zoho Sign.</p>
+
+      <form id="signDetailsForm" novalidate>
+        <div class="sign-details-grid">
+          <div class="sign-details-group">
+            <h3>Handover By</h3>
+            <div class="sign-field">
+              <label for="handoverName">Name</label>
+              <input id="handoverName" name="handover_name" type="text" placeholder="Full name" />
+            </div>
+            <div class="sign-field">
+              <label for="handoverPhone">Phone</label>
+              <input id="handoverPhone" name="handover_phone" type="tel" placeholder="Phone number" />
+            </div>
+            <div class="sign-field">
+              <label for="handoverEmail">Email</label>
+              <input id="handoverEmail" name="handover_email" type="email" placeholder="name@example.com" />
+            </div>
+          </div>
+
+          <div class="sign-details-group">
+            <h3>Received By</h3>
+            <div class="sign-field">
+              <label for="receivedName">Name</label>
+              <input id="receivedName" name="received_name" type="text" placeholder="Full name" />
+            </div>
+            <div class="sign-field">
+              <label for="receivedPhone">Phone</label>
+              <input id="receivedPhone" name="received_phone" type="tel" placeholder="Phone number" />
+            </div>
+            <div class="sign-field">
+              <label for="receivedEmail">Email</label>
+              <input id="receivedEmail" name="received_email" type="email" placeholder="name@example.com" />
+            </div>
+          </div>
+        </div>
+
+        <div class="sign-details-error" id="signDetailsError" aria-live="polite"></div>
+
+        <div class="sign-details-actions">
+          <button type="button" class="custom-modal-btn" id="cancelSignDetailsModal">Cancel</button>
+          <button type="submit" class="custom-modal-btn danger" id="submitSignDetailsModal">Continue</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -9996,463 +10159,707 @@
         });
       }
 
-      // ── Generate Report button ─────────────────────────────────────────
-      if (generateReportButton) {
-        generateReportButton.addEventListener('click', function () {
-          updateStatus('Generating PDF report...');
-          captureInspectionCanvasReliable().then(function (canvas) {
-            var imgDataUrl = canvas.toDataURL('image/png');
-            var issueMarks = getAllMarks().filter(function (m) { return Boolean(m.category); });
+      function canvasToOptimizedDataUrl(canvas, quality, maxDimension) {
+        if (!canvas || !canvas.width || !canvas.height) {
+          return '';
+        }
 
-            // Helper to preload images as base64
-            function loadImg(src) {
-              return new Promise(function(resolve) {
-                var img = new Image();
-                img.crossOrigin = 'Anonymous';
-                img.onload = function() { 
-                  var cvs = document.createElement('canvas');
-                  cvs.width = img.width;
-                  cvs.height = img.height;
-                  var ctx = cvs.getContext('2d');
-                  ctx.drawImage(img, 0, 0);
-                  resolve({
-                    dataUrl: cvs.toDataURL('image/png'),
-                    width: img.width,
-                    height: img.height
-                  });
-                };
-                img.onerror = function() { resolve(null); }; // Fail gracefully
-                img.src = src;
-              });
-            }
+        var targetCanvas = document.createElement('canvas');
+        var currentWidth = canvas.width;
+        var currentHeight = canvas.height;
+        var targetQuality = quality !== undefined ? quality : 0.52;
+        var targetMaxDimension = maxDimension || 1200;
 
-            var preloadPromises = [
-              loadImg('assets/Alain_Logo.png'),
-              loadImg('assets/Koenigsegg_Logo.png')
-            ];
-            
-            issueMarks.forEach(function(m) {
-              if (m.attachmentImageData) {
-                 preloadPromises.push(loadImg(m.attachmentImageData)); 
-              } else if (m.attachmentImageEncryptedId) {
-                 preloadPromises.push(
-                    fetchImageFromCrm(m.attachmentImageEncryptedId, m.crmLineItemId)
-                      .then(function(b64) {
-                         if (!b64) return null;
-                         m.attachmentImageData = b64; 
-                         return loadImg(b64);
-                      })
-                      .catch(function() { return null; })
-                 );
-              } else if (m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url)) {
-                 var localUrl = m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url);
-                 preloadPromises.push(loadImg(localUrl)); 
-              }
-            });
+        if (currentWidth > targetMaxDimension || currentHeight > targetMaxDimension) {
+          var scale = Math.min(targetMaxDimension / currentWidth, targetMaxDimension / currentHeight, 1);
+          targetCanvas.width = Math.max(1, Math.round(currentWidth * scale));
+          targetCanvas.height = Math.max(1, Math.round(currentHeight * scale));
+        } else {
+          targetCanvas.width = currentWidth;
+          targetCanvas.height = currentHeight;
+        }
 
-            Promise.all(preloadPromises).then(function(loadedImages) {
-              var alainLogo = loadedImages[0];
-              var kgbLogo = loadedImages[1];
-              
-              var issueImgIdx = 2;
-              issueMarks.forEach(function(m) {
-                var hasImg = m.attachmentImageData || m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url) || m.attachmentImageEncryptedId;
-                if (hasImg) {
-                  m._preloadedImage = loadedImages[issueImgIdx++];
+        var targetContext = targetCanvas.getContext('2d');
+        targetContext.fillStyle = '#ffffff';
+        targetContext.fillRect(0, 0, targetCanvas.width, targetCanvas.height);
+        targetContext.drawImage(canvas, 0, 0, targetCanvas.width, targetCanvas.height);
+
+        return targetCanvas.toDataURL('image/jpeg', targetQuality);
+      }
+
+
+      function createInspectionDocument(jsPDFCtor, docOptions) {
+        docOptions = docOptions || {};
+        var signDetails = docOptions.signDetails || {};
+        var issueMarks = Array.isArray(docOptions.issueMarks) ? docOptions.issueMarks : [];
+        var alainLogo = docOptions.alainLogo || null;
+        var kgbLogo = docOptions.kgbLogo || null;
+        var canvas = docOptions.canvas || null;
+        
+        var imgDataUrl = '';
+        if (canvas) {
+            try {
+                imgDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            } catch(e) {}
+        }
+        
+        var phoneIcon = null; // not strictly necessary unless imported
+        var emailIcon = null;
+        var webIcon = null;
+        var socialIcon = null;
+        var fbIcon = null;
+        var ytIcon = null;
+        
+        // Remove or ignore options.signData in favor of signDetails
+
+                var doc = new jsPDFCtor({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+                var pageW = doc.internal.pageSize.getWidth();
+                var pageH = doc.internal.pageSize.getHeight();
+                var margin = 40;
+                var now = new Date();
+                var recordData = crmState.recordData || {};
+
+                function getFieldValue(value) {
+                  if (value === null || value === undefined) return '';
+                  if (typeof value === 'string') return value;
+                  if (typeof value === 'number') return String(value);
+                  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+                  if (typeof value === 'object') {
+                    if (value.name) return String(value.name);
+                    if (value.display_value) return String(value.display_value);
+                    return '';
+                  }
+                  return String(value);
                 }
-              });
 
-              // Build PDF using jsPDF (loaded from CDN)
-              function buildAndDownloadPdf(jsPDF) {
-                var doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-              var pageW = doc.internal.pageSize.getWidth();
-              var pageH = doc.internal.pageSize.getHeight();
-              var margin = 40;
-              var now = new Date();
-              var recordData = crmState.recordData || {};
-
-              function getFieldValue(value) {
-                if (value === null || value === undefined) return '';
-                if (typeof value === 'string') return value;
-                if (typeof value === 'number') return String(value);
-                if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-                if (typeof value === 'object') {
-                  if (value.name) return String(value.name);
-                  if (value.display_value) return String(value.display_value);
-                  return '';
+                // Custom Header Banner function
+                function drawHeaderBanner() {
+                  // Draw left logo
+                  if (alainLogo) {
+                    var aspect1 = alainLogo.width / alainLogo.height;
+                    var h1 = 36;
+                    var w1 = h1 * aspect1;
+                    doc.addImage(alainLogo.dataUrl, 'PNG', margin, 17, w1, h1);
+                  }
                 }
-                return String(value);
-              }
 
-              // Custom Header Banner function
-              function drawHeaderBanner() {
-                // Draw left logo
-                if (alainLogo) {
-                  var aspect1 = alainLogo.width / alainLogo.height;
-                  var h1 = 36;
-                  var w1 = h1 * aspect1;
-                  doc.addImage(alainLogo.dataUrl, 'PNG', margin, 17, w1, h1);
+                // Helper for section titles
+                function drawSectionTitle(title, y) {
+                  doc.setFillColor(243, 244, 246); // Light gray #f3f4f6
+                  doc.rect(margin, y - 16, pageW - margin * 2, 24, 'F');
+                  doc.setTextColor(31, 41, 55);
+                  doc.setFontSize(12);
+                  doc.setFont('helvetica', 'bold');
+                  doc.text(title, margin + 10, y);
+                  return y + 16; // Return new yPos
+                }
+
+                // ══════════════════════════════════════════════════════════
+                // PAGE 1 — VEHICLE RECEIVED FORM
+                // ══════════════════════════════════════════════════════════
+                drawHeaderBanner();
+
+                var yPos = 80;
+                doc.setTextColor(31, 41, 55);
+                doc.setFontSize(22);
+                doc.setFont('helvetica', 'bold');
+                doc.text('VEHICLE RECEIVED FORM', pageW / 2, yPos, { align: 'center' });
+                yPos += 25;
+
+                // ── Top Section General Info ──
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+
+                var dateStr = now.toLocaleDateString();
+                var timeStr = now.toLocaleTimeString();
+
+                // Date boxes (8 smaller boxes for DD MM YYYY)
+                doc.text('Date:', margin, yPos);
+                doc.setFontSize(10);
+
+                yPos += 20;
+                doc.text('Driver:', margin, yPos);
+                doc.line(margin + 35, yPos + 2, margin + 120, yPos + 2);
+                doc.text(getFieldValue(recordData.Driver), margin + 38, yPos);
+
+                doc.text('Petrol Level:', margin + 140, yPos);
+                doc.line(margin + 205, yPos + 2, margin + 280, yPos + 2);
+                doc.text(getFieldValue(recordData.Petrol_Level), margin + 210, yPos);
+
+                // Branch boxes on right
+                var bxX = pageW - margin - 170;
+                doc.line(margin + 300, yPos + 2, pageW - margin, yPos + 2); // fill line
+
+                doc.rect(bxX, yPos - 10, 12, 12);
+                doc.text('SZR', bxX + 16, yPos);
+                doc.rect(bxX + 45, yPos - 10, 12, 12);
+                doc.text('Al AWEER', bxX + 61, yPos);
+                doc.rect(bxX + 120, yPos - 10, 12, 12);
+                doc.text('Al AIN', bxX + 136, yPos);
+
+                var branch = getFieldValue(recordData.Branch).toUpperCase();
+
+                function drawTick(tx, ty) {
+                  doc.setLineWidth(1.5);
+                  doc.line(tx, ty - 1, tx + 3, ty + 2);
+                  doc.line(tx + 3, ty + 2, tx + 8, ty - 5);
+                  doc.setLineWidth(1);
+                }
+                if (branch.indexOf('SZR') > -1) drawTick(bxX + 2, yPos - 4);
+                if (branch.indexOf('AWEER') > -1) drawTick(bxX + 47, yPos - 4);
+                if (branch.indexOf('AIN') > -1) drawTick(bxX + 122, yPos - 4);
+
+                yPos += 20;
+                doc.text('Time:', margin, yPos);
+                doc.line(margin + 35, yPos + 2, margin + 120, yPos + 2);
+                doc.text(timeStr, margin + 38, yPos);
+
+                doc.text('Error/s:', margin + 140, yPos);
+                doc.line(margin + 205, yPos + 2, margin + 280, yPos + 2);
+                doc.text(getFieldValue(recordData.Errors), margin + 210, yPos);
+
+                yPos += 15;
+
+                // ── Main Structure Grid ──
+                var leftW = 250; // Increased left section width to allow larger image natively
+                var rightX = margin + leftW;
+                var rightW = pageW - margin - rightX;
+                var gridTop = yPos;
+
+                // 1. Left Column: Vehicle Details
+                doc.setFillColor(230, 230, 230); // light gray for headers
+                doc.rect(margin, gridTop, leftW, 20, 'S'); // Make and Model Header Background uses Stroke (No fill)
+                doc.setFont('helvetica', 'bold');
+                doc.text('Make and Model:', margin + 5, gridTop + 14);
+                doc.setFont('helvetica', 'normal');
+                doc.text(getFieldValue(recordData.Make) + ' ' + getFieldValue(recordData.Model), margin + 100, gridTop + 14);
+
+                doc.rect(margin, gridTop, leftW, 170); // the entire left details bounding box properly spaced
+
+                doc.setFont('helvetica', 'bold');
+                doc.text('V.I.N:', margin + 5, gridTop + 38);
+                doc.setFont('helvetica', 'normal');
+
+                // VIN Boxes
+                var vin = getFieldValue(recordData.VIN).toUpperCase();
+                var vinBoxW = Math.floor((leftW - 55) / 17);
+                for (var i = 0; i < 17; i++) {
+                  var vx = margin + 50 + (i * vinBoxW);
+                  doc.rect(vx, gridTop + 25, vinBoxW, 17);
+                  if (vin[i]) {
+                    doc.text(vin[i], vx + 3, gridTop + 37);
+                  }
+                }
+
+                doc.line(margin, gridTop + 45, margin + leftW, gridTop + 45); // line below VIN
+                doc.rect(margin, gridTop + 45, leftW, 35, 'S'); // Extra height added (35 instead of 25)
+
+                var yy = gridTop + 57;
+                var lineY = gridTop + 80;
+                doc.setFontSize(8.5);
+
+                doc.setFont('helvetica', 'bold');
+                doc.text('Year Model:', margin + 3, yy);
+                doc.setFont('helvetica', 'normal');
+                doc.text(doc.splitTextToSize(getFieldValue(recordData.Year_Model), 55)[0] || '', margin + 3, yy + 15);
+                doc.line(margin + 65, gridTop + 45, margin + 65, lineY);
+
+                doc.setFont('helvetica', 'bold');
+                doc.text('Mileage:', margin + 68, yy);
+                doc.setFont('helvetica', 'normal');
+                doc.text(doc.splitTextToSize(getFieldValue(recordData.Mileage), 40)[0] || '', margin + 68, yy + 15);
+                doc.line(margin + 110, gridTop + 45, margin + 110, lineY);
+
+                var spec = getFieldValue(recordData.Spec) || '';
+                var specUp = spec.toUpperCase();
+                doc.setFont('helvetica', 'bold');
+                doc.text('GCC', margin + 113, yy);
+                if (specUp.indexOf('GCC') > -1) drawTick(margin + 119, yy + 14);
+                doc.line(margin + 140, gridTop + 45, margin + 140, lineY);
+
+                doc.text('Euro', margin + 143, yy);
+                if (specUp.indexOf('EURO') > -1 || specUp.indexOf('EUR') > -1) drawTick(margin + 149, yy + 14);
+                doc.line(margin + 170, gridTop + 45, margin + 170, lineY);
+
+                doc.text('U.S.A', margin + 173, yy);
+                if (specUp.indexOf('USA') > -1 || specUp.indexOf('U.S.A') > -1) drawTick(margin + 179, yy + 14);
+                doc.line(margin + 200, gridTop + 45, margin + 200, lineY);
+
+                doc.text('Other', margin + 203, yy);
+                if (spec && specUp.indexOf('GCC') === -1 && specUp.indexOf('EURO') === -1 && specUp.indexOf('USA') === -1) {
+                  doc.setFont('helvetica', 'normal');
+                  doc.text(doc.splitTextToSize(spec, 55)[0] || '', margin + 203, yy + 15);
+                }
+
+                doc.line(margin, lineY, margin + leftW, lineY); // line below Year/Mileage
+
+                // Colors section replaced with distinct clean text values
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Exterior Colour:', margin + 5, lineY + 15);
+                doc.setFont('helvetica', 'normal');
+                doc.text(doc.splitTextToSize(getFieldValue(recordData.Exterior_Color), leftW - 10)[0] || '', margin + 5, lineY + 30);
+
+                doc.line(margin, lineY + 45, margin + leftW, lineY + 45);
+
+                doc.setFont('helvetica', 'bold');
+                doc.text('Interior Colour:', margin + 5, lineY + 60);
+                doc.setFont('helvetica', 'normal');
+                doc.text(doc.splitTextToSize(getFieldValue(recordData.Interior_Color), leftW - 10)[0] || '', margin + 5, lineY + 75);
+
+                // 2. Right Column: Vehicle Items
+                doc.rect(rightX, gridTop, rightW, 275); // increased height from 250 to 275 to accommodate 'Others:' field
+                doc.rect(rightX, gridTop, rightW, 20, 'S'); // Removed 'FD' to fix red/dark headers
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(10);
+                doc.text('Vehicle Items:', rightX + 5, gridTop + 14);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8.5); // Making slightly smaller to avoid overlap
+
+                var rightItemsY = gridTop + 35;
+                var lineH = 13.5;
+
+                var rightCol1 = [
+                  '__ Key/s _______', '__ Service Book', '__ Manual Book (EN | AR)',
+                  '__ Reg. Card', '__ Fire Extinguisher',
+                  '__ Tools', '__ Transport Docs',
+                  '__ Car Cover', '__ Car Charger', '__ Seat Cover',
+                  '__ Spare Tyre', '__ Carpets | Matts', '__ First Aid Kit',
+                  '__ Safety Triangle', '__ Tyre Compressor'
+                ];
+
+                var rightCol2 = [
+                  '', '', '',
+                  '__ Expired', '',
+                  '', '__ NOC  | __ VCC',
+                  '', '', '',
+                  '__ Remotes', '__ Pillow', '__ Warranty',
+                  '__ Custom Paper', '__ Repair Kit'
+                ];
+
+                for (var k = 0; k < rightCol1.length; k++) {
+                  doc.text(rightCol1[k], rightX + 3, rightItemsY);
+                  if (rightCol2[k]) {
+                    doc.text(rightCol2[k], rightX + 100, rightItemsY); // squeezed to compensate
+                  }
+                  rightItemsY += lineH;
+                }
+
+                rightItemsY += 8;
+                doc.text('Plate Number:', rightX + 5, rightItemsY);
+                doc.rect(rightX + 70, rightItemsY - 10, 25, 12); // Plate number box
+                doc.text(doc.splitTextToSize(getFieldValue(recordData.Plate_Number), 100)[0] || '', rightX + 75, rightItemsY - 1);
+                doc.line(rightX + 100, rightItemsY + 2, rightX + rightW - 10, rightItemsY + 2);
+
+                rightItemsY += 15;
+                doc.text('Others:', rightX + 5, rightItemsY);
+                doc.line(rightX + 45, rightItemsY + 2, rightX + rightW - 10, rightItemsY + 2);
+
+                // Keys mappings manually
+                var recordKeysValue = String(getFieldValue(recordData.Keys));
+                if (recordKeysValue !== 'N/A' && recordKeysValue.trim() !== '') {
+                  doc.setFont('helvetica', 'bold');
+                  doc.setTextColor(200, 0, 0);
+                  doc.text(recordKeysValue, rightX + 40, gridTop + 34);
+                  doc.setTextColor(31, 41, 55);
+                }
+                doc.setFont('helvetica', 'normal');
+
+                // ── Bottom Sections below grids ──
+                var codeTop = gridTop + 275; // Pushed down from 250 to 275 avoiding overlap with 'Others:'
+                doc.rect(rightX, codeTop, rightW, 115); // increased box height from 92 to 115 for plenty of space
+
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Issue Codes:', rightX + 5, codeTop + 13);
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+
+                var codeListL = [
+                  'RP - Repaint', 'PC - Paint Chip', 'GS - Glass Scratch',
+                  'GB - Glass Broken', 'DD - Dents / Dings', 'CR - Curb Rash',
+                  'LM - Loose Molding', 'CD - Car is Dirty'
+                ];
+                var codeListR = [
+                  'SH - Swirls Hologram', 'WS - Water Spots', 'OX - Oxidation',
+                  'CF - Clear Coat Failure', 'DS - Deep Scratch', 'UD - Unknown Defect',
+                  'CS - Cracks', 'CC - Car is Clean'
+                ];
+
+                // Now spacing is much looser (11.5 points per row instead of 9.5)
+                for (var c = 0; c < codeListL.length; c++) {
+                  doc.text(codeListL[c], rightX + 3, codeTop + 27 + (c * 11.5));
+                  var rXOffset = rightX + 115; // Tightened string offset to account for smaller width
+                  doc.text(codeListR[c], rXOffset, codeTop + 27 + (c * 11.5));
+                }
+
+                var notesTop = codeTop + 115;
+                doc.rect(rightX, notesTop, rightW, 60); // increased Notes slightly too (60 instead of 55)
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Notes:', rightX + 5, notesTop + 13);
+
+                var priceTop = notesTop + 60;
+                doc.rect(rightX, priceTop, rightW, 25); // Cost Price | Selling
+                doc.text('Cost Price:', rightX + 5, priceTop + 13);
+                doc.line(rightX + rightW / 2, priceTop, rightX + rightW / 2, priceTop + 25);
+                doc.text('Selling:', rightX + rightW / 2 + 5, priceTop + 13);
+
+                var consignedTop = priceTop + 25;
+                doc.rect(rightX, consignedTop, rightW, 25);
+                doc.text('Consigned By:', rightX + 5, consignedTop + 13);
+
+                var inspectedTop = consignedTop + 25;
+                doc.rect(rightX, inspectedTop, rightW, 25);
+                doc.text('Inspected By:', rightX + 5, inspectedTop + 13);
+
+                var sigTop = inspectedTop + 25;
+                doc.rect(rightX, sigTop, rightW, 45);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Name: _______________________________', rightX + 5, sigTop + 14);
+                doc.text('Mobile No: ___________________________', rightX + 5, sigTop + 28);
+                doc.text('Signature: ___________________________', rightX + 5, sigTop + 41);
+
+                // Showroom Manager signature moved up (no image in left column anymore)
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Showroom Manager: ______________________', margin, gridTop + 185);
+
+                // ══════════════════════════════════════════════════════════
+                // PAGE 2 — Inspection Visual & Issue Log
+                // ══════════════════════════════════════════════════════════
+                doc.addPage();
+                drawHeaderBanner();
+
+                yPos = 90;
+                
+                // Add Inspection Image at top of Page 2
+                if (imgDataUrl) {
+                  var aspect = canvas.width / canvas.height;
+                  var maxW = pageW - margin * 2;
+                  var maxH = 200; // Max height for image on page 2
+                  var drawW = maxW;
+                  var drawH = maxW / aspect;
+                  if (drawH > maxH) {
+                    drawH = maxH;
+                    drawW = maxH * aspect;
+                  }
+                  var cx = margin + (maxW - drawW) / 2;
+                  var cy = yPos;
+                  doc.addImage(imgDataUrl, 'JPEG', cx, cy, drawW, drawH);
+                  yPos = cy + drawH + 20; // Move yPos below image
                 }
                 
-                // Draw right logo
-                if (kgbLogo) {
-                  var aspect2 = kgbLogo.width / kgbLogo.height;
-                  var h2 = 36;
-                  var w2 = h2 * aspect2;
-                  doc.addImage(kgbLogo.dataUrl, 'PNG', pageW - margin - w2, 17, w2, h2);
-                }
-              }
+                yPos = drawSectionTitle('ISSUE LOG', yPos);
+                yPos += 15;
 
-              // Helper for section titles
-              function drawSectionTitle(title, y) {
-                doc.setFillColor(243, 244, 246); // Light gray #f3f4f6
-                doc.rect(margin, y - 16, pageW - margin * 2, 24, 'F');
-                doc.setTextColor(31, 41, 55);
+                var tableX = margin;
+                var tableW = pageW - margin * 2;
+
                 doc.setFontSize(12);
                 doc.setFont('helvetica', 'bold');
-                doc.text(title, margin + 10, y);
-                return y + 16; // Return new yPos
-              }
-
-              // ══════════════════════════════════════════════════════════
-              // PAGE 1 — DELIVERY NOTE
-              // ══════════════════════════════════════════════════════════
-              drawHeaderBanner();
-              
-              var yPos = 90;
-              doc.setTextColor(31, 41, 55);
-              doc.setFontSize(22);
-              doc.setFont('helvetica', 'bold');
-              doc.text('DELIVERY NOTE', pageW / 2, yPos, { align: 'center' });
-              yPos += 30;
-              
-              // ── General Info ───────────────────────────────────────────
-              doc.setFontSize(10);
-              doc.setFont('helvetica', 'normal');
-              doc.setTextColor(75, 85, 99); // Gray #4b5563
-              var dateStr = now.toLocaleDateString();
-              var timeStr = now.toLocaleTimeString();
-              doc.text('Date: ' + dateStr, margin, yPos);
-              yPos += 18;
-              doc.text('Time: ' + timeStr, margin, yPos);
-              yPos += 18;
-              doc.text('Petrol Level: ' + getFieldValue(recordData.Petrol_Level), margin, yPos);
-              yPos += 30;
-
-              // ── Vehicle Details ────────────────────────────────────────
-              yPos = drawSectionTitle('VEHICLE DETAILS', yPos);
-              yPos += 15;
-              
-              var leftFields = [
-                { label: 'Make', value: getFieldValue(recordData.Make) },
-                { label: 'Exterior Colour', value: getFieldValue(recordData.Exterior_Color) },
-                { label: 'Mileage', value: getFieldValue(recordData.Mileage) }
-              ];
-              var rightFields = [
-                { label: 'Model', value: getFieldValue(recordData.Model) },
-                { label: 'Year Model', value: getFieldValue(recordData.Year_Model) },
-                { label: 'Interior Colour', value: getFieldValue(recordData.Interior_Color) }
-              ];
-
-              doc.setFontSize(10);
-              var detailsStartX = margin + 10;
-              var colWidth = (pageW - margin * 2) / 2;
-              
-              for (var i = 0; i < 3; i++) {
-                // Left
-                doc.setFont('helvetica', 'bold');
                 doc.setTextColor(31, 41, 55);
-                doc.text(leftFields[i].label + ':', detailsStartX, yPos);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(75, 85, 99);
-                doc.text(leftFields[i].value, detailsStartX + 90, yPos);
-                
-                // Right
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(31, 41, 55);
-                doc.text(rightFields[i].label + ':', detailsStartX + colWidth, yPos);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(75, 85, 99);
-                doc.text(rightFields[i].value, detailsStartX + colWidth + 90, yPos);
-                
+                doc.text('Total Issues Found: ' + issueMarks.length, tableX, yPos);
                 yPos += 20;
-              }
-              
-              doc.setFont('helvetica', 'bold');
-              doc.setTextColor(31, 41, 55);
-              doc.text('V.I.N Number:', detailsStartX, yPos);
-              doc.setFont('helvetica', 'normal');
-              doc.setTextColor(75, 85, 99);
-              doc.text(getFieldValue(recordData.VIN), detailsStartX + 90, yPos);
-              
-              yPos += 30;
 
-              // ── Vehicle Items ──────────────────────────────────────────
-              yPos = drawSectionTitle('VEHICLE ITEMS', yPos);
-              yPos += 20;
-              
-              var vehicleItems = [
-                { label: 'No. of Keys', value: recordData.Keys },
-                { label: 'Plates', value: recordData.Plate_Number },
-                { label: 'Reg. Card', value: recordData.Reg_Card },
-                { label: 'VCC', value: recordData.VCC },
-                { label: 'Export Cert/Hayaza', value: recordData.Export_Cert },
-                { label: 'Service Book', value: recordData.Service_Book },
-                { label: 'Manual Book', value: recordData.Manual_Book },
-                { label: 'Car Cover', value: recordData.Car_Cover },
-                { label: 'Car Charger', value: recordData.Charger },
-                { label: 'Fire Extinguisher', value: recordData.Fire_Extinguisher },
-                { label: 'Tool Kit', value: recordData.Tool_Kit },
-                { label: 'Other Items', value: recordData.Included_Items }
-              ];
-
-              doc.setFontSize(10);
-              var itemStartX = margin + 10;
-              var numItemCols = 2;
-              var itemsPerCol = Math.ceil(vehicleItems.length / numItemCols);
-              var itemColWidth = (pageW - margin * 2) / numItemCols;
-              
-              var col0Y = yPos;
-              var col1Y = yPos;
-              
-              // Helper to draw check or cross
-              function drawIcon(x, y, isCheck) {
-                var cy = y - 4; // Shift up 4 points to align with text baseline
-                doc.setLineWidth(1.5);
-                if (isCheck) {
-                  doc.setDrawColor(16, 185, 129); // Green
-                  // Draw tick
-                  doc.line(x, cy - 1, x + 3, cy + 2);
-                  doc.line(x + 3, cy + 2, x + 8, cy - 5);
+                if (!issueMarks.length) {
+                  doc.setFontSize(11);
+                  doc.setFont('helvetica', 'italic');
+                  doc.setTextColor(107, 114, 128); // #6b7280
+                  doc.text('No issues logged in this inspection.', tableX, yPos);
                 } else {
-                  doc.setDrawColor(239, 68, 68); // Red
-                  // Draw X
-                  doc.line(x, cy - 4, x + 6, cy + 2);
-                  doc.line(x + 6, cy - 4, x, cy + 2);
+                  issueMarks.forEach(function (mark, idx) {
+                    // Pre-calc height to handle pagination
+                    var comment = normalizeCommentText(mark.comment) || 'No comment added.';
+                    var commentLines = doc.splitTextToSize(comment, tableW - 30);
+                    var rowH = 16 + 14 + commentLines.length * 12 + 10;
+
+                    var imgH = 0;
+                    var imgW = 0;
+                    if (mark._preloadedImage && mark._preloadedImage.dataUrl) {
+                      var aspect = mark._preloadedImage.width / mark._preloadedImage.height;
+                      imgW = 150; // Max width for issue image
+                      imgH = imgW / aspect;
+                      if (imgH > 100) { imgH = 100; imgW = imgH * aspect; } // Cap height
+                      rowH += imgH + 15;
+                    }
+
+                    if (yPos + rowH > pageH - margin - 40) {
+                      doc.addPage();
+                      drawHeaderBanner();
+                      yPos = 90;
+                      yPos = drawSectionTitle('ISSUE LOG (Cont.)', yPos);
+                      yPos += 15;
+                    }
+
+                    var config = getDefectConfig(mark.category);
+                    var issueCode = getIssueCode(mark);
+                    var colorRgb = hexToRgb(config.color || '#64748b');
+
+                    // Draw issue box background
+                    doc.setFillColor(249, 250, 251); // #f9fafb
+                    doc.setDrawColor(229, 231, 235); // #e5e7eb
+                    doc.setLineWidth(1);
+                    doc.roundedRect(tableX, yPos, tableW, rowH - 4, 6, 6, 'FD');
+
+                    // Left color stripe
+                    doc.setFillColor(colorRgb.r, colorRgb.g, colorRgb.b);
+                    doc.roundedRect(tableX, yPos, 8, rowH - 4, 6, 6, 'F');
+                    // Square off right side of stripe
+                    doc.rect(tableX + 4, yPos, 4, rowH - 4, 'F');
+
+                    var textX = tableX + 20;
+                    var textY = yPos + 18;
+
+                    // Issue Code & Category
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(31, 41, 55);
+                    doc.text(issueCode + ' — ' + mark.category, textX, textY);
+
+                    // Location badge/text (right aligned)
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(107, 114, 128);
+                    var locationText = 'Loc: ' + formatPartName(mark.partId || '');
+                    var locW = doc.getTextWidth(locationText);
+                    doc.text(locationText, tableX + tableW - locW - 10, textY);
+
+                    textY += 16;
+
+                    // Comment lines
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(75, 85, 99);
+                    doc.text(commentLines, textX, textY);
+                    textY += commentLines.length * 12 + 6;
+
+                    // Draw image if exists
+                    if (mark._preloadedImage && mark._preloadedImage.dataUrl) {
+                      doc.setDrawColor(200, 200, 200);
+                      doc.setLineWidth(1);
+                      doc.rect(textX - 1, textY - 1, imgW + 2, imgH + 2);
+                      doc.addImage(mark._preloadedImage.dataUrl, 'PNG', textX, textY, imgW, imgH);
+                    }
+
+                    yPos += rowH + 6;
+                  });
                 }
-              }
 
-              for (var i = 0; i < vehicleItems.length; i++) {
-                var isCol0 = i < itemsPerCol;
-                var currentX = isCol0 ? itemStartX : itemStartX + itemColWidth;
-                var currentY = isCol0 ? col0Y : col1Y;
-                
-                var item = vehicleItems[i];
-                var rawVal = item.value;
-                
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(31, 41, 55);
-                doc.text(item.label + ':', currentX, currentY);
-                
-                var lblW = doc.getTextWidth(item.label + ': ');
-                var valX = currentX + Math.max(lblW + 8, 110);
-                
-                var isBoolean = typeof rawVal === 'boolean' || rawVal === 'Yes' || rawVal === 'No';
-                
-                if (isBoolean) {
-                  var isTrue = rawVal === true || rawVal === 'Yes';
-                  drawIcon(valX, currentY, isTrue);
-                  currentY += 16; // fixed step for booleans
-                } else {
-                  var displayVal = (rawVal === null || rawVal === undefined || rawVal === '') ? 'N/A' : String(rawVal);
-                  doc.setFont('helvetica', 'normal');
-                  doc.setTextColor(75, 85, 99);
-                  if (displayVal !== 'N/A') { 
-                    doc.setTextColor(31, 41, 55); 
-                  }
-                  
-                  // Wrap text
-                  var maxTextW = itemColWidth - (valX - currentX) - 10;
-                  var splitText = doc.splitTextToSize(displayVal, maxTextW);
-                  
-                  doc.text(splitText, valX, currentY);
-                  currentY += (splitText.length * 12) + 10;
-                }
-                
-                // Update tracker
-                if (isCol0) {
-                  col0Y = currentY;
-                } else {
-                  col1Y = currentY;
-                }
-              }
-              
-              yPos = Math.max(col0Y, col1Y) + 10;
+                // ── Acknowledgement & Signatures ───────────────────────────
+                // Add acknowledgement at the end of the current page (no new page)
+                var ackText = "I hereby acknowledge that I have examined this vehicle. I Agree with the all conditions and exeptions noted hereon, AIAin Class Motors will not entertain/be heldresponsible for any caims arising due to damage after and acknow- edgement orwhile storing the Vehice after Delivery.";
 
-              // ── Inspection Image ───────────────────────────────────────
-              yPos = drawSectionTitle('VISUAL INSPECTION', yPos);
-              yPos += 15;
-              
-              var imgX = margin;
-              var imgMaxWidth = pageW - margin * 2;
-              var imgMaxHeight = pageH - yPos - margin - 45; // Fit remaining space on page, avoiding footer
-              
-              var canvasAspect = canvas.width / canvas.height;
-              var imgDrawW = imgMaxWidth;
-              var imgDrawH = imgMaxWidth / canvasAspect;
-              
-              if (imgDrawH > imgMaxHeight) {
-                if (imgMaxHeight > 100) { // Shrink to fit if reasonable space left
-                  imgDrawH = imgMaxHeight;
-                  imgDrawW = imgMaxHeight * canvasAspect;
-                  // Center image
-                  imgX = margin + (imgMaxWidth - imgDrawW) / 2;
-                } else {
-                  // Not enough space, move to next page
+                // Check if we need a new page for acknowledgement section
+                var ackSectionHeight = 150; // Estimated height needed for acknowledgement section
+                if (yPos + ackSectionHeight > pageH - margin - 60) {
                   doc.addPage();
                   drawHeaderBanner();
                   yPos = 90;
-                  doc.setTextColor(31, 41, 55);
-                  doc.setFontSize(22);
-                  doc.setFont('helvetica', 'bold');
-                  doc.text('VISUAL INSPECTION (Cont.)', pageW / 2, yPos, { align: 'center' });
-                  yPos += 15;
-                  imgMaxHeight = pageH - yPos - margin - 45;
-                  imgDrawW = imgMaxWidth;
-                  imgDrawH = imgMaxWidth / canvasAspect;
-                  if (imgDrawH > imgMaxHeight) {
-                    imgDrawH = imgMaxHeight;
-                    imgDrawW = imgMaxHeight * canvasAspect;
-                    imgX = margin + (imgMaxWidth - imgDrawW) / 2;
-                  }
                 }
-              } else {
-                 // Center image horizontally within max width
-                 imgX = margin + (imgMaxWidth - imgDrawW) / 2;
-              }
-              
-              if (imgDrawH > 0) {
-                // Add an elegant border around image
-                doc.setDrawColor(229, 231, 235); // #e5e7eb
-                doc.setLineWidth(2);
-                doc.rect(imgX - 4, yPos - 4, imgDrawW + 8, imgDrawH + 8);
-                doc.addImage(imgDataUrl, 'PNG', imgX, yPos, imgDrawW, imgDrawH);
-              }
+                
+                yPos += 20; // Add some spacing before acknowledgement
 
-              // ══════════════════════════════════════════════════════════
-              // PAGE 2 — Issue Log
-              // ══════════════════════════════════════════════════════════
-              doc.addPage();
-              drawHeaderBanner();
-              
-              yPos = 90;
-              yPos = drawSectionTitle('ISSUE LOG', yPos);
-              yPos += 15;
-              
-              var tableX = margin;
-              var tableW = pageW - margin * 2;
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(75, 85, 99);
+                var splitAck = doc.splitTextToSize(ackText, tableW);
+                doc.text(splitAck, margin, yPos);
+                yPos += (splitAck.length * 12) + 30;
 
-              doc.setFontSize(12);
-              doc.setFont('helvetica', 'bold');
-              doc.setTextColor(31, 41, 55);
-              doc.text('Total Issues Found: ' + issueMarks.length, tableX, yPos);
-              yPos += 20;
-
-              if (!issueMarks.length) {
                 doc.setFontSize(11);
-                doc.setFont('helvetica', 'italic');
-                doc.setTextColor(107, 114, 128); // #6b7280
-                doc.text('No issues logged in this inspection.', tableX, yPos);
-              } else {
-                issueMarks.forEach(function (mark, idx) {
-                  // Pre-calc height to handle pagination
-                  var comment = normalizeCommentText(mark.comment) || 'No comment added.';
-                  var commentLines = doc.splitTextToSize(comment, tableW - 30);
-                  var rowH = 16 + 14 + commentLines.length * 12 + 10;
-                  
-                  var imgH = 0;
-                  var imgW = 0;
-                  if (mark._preloadedImage && mark._preloadedImage.dataUrl) {
-                    var aspect = mark._preloadedImage.width / mark._preloadedImage.height;
-                    imgW = 150; // Max width for issue image
-                    imgH = imgW / aspect;
-                    if (imgH > 100) { imgH = 100; imgW = imgH * aspect; } // Cap height
-                    rowH += imgH + 15;
-                  }
-                  
-                  if (yPos + rowH > pageH - margin - 40) {
-                    doc.addPage();
-                    drawHeaderBanner();
-                    yPos = 90;
-                    yPos = drawSectionTitle('ISSUE LOG (Cont.)', yPos);
-                    yPos += 15;
-                  }
+                doc.setTextColor(31, 41, 55);
 
-                  var config = getDefectConfig(mark.category);
-                  var issueCode = getIssueCode(mark);
-                  var colorRgb = hexToRgb(config.color || '#64748b');
+                var leftX = margin + 10;
+                var rightX = pageW / 2 + 10;
 
-                  // Draw issue box background
-                  doc.setFillColor(249, 250, 251); // #f9fafb
+                // Get form field values - use options.signData if available (for Sign flow), otherwise fall back to DOM
+                var handoverName = (signDetails && signDetails.handover && signDetails.handover.name) ? signDetails.handover.name : 
+                                   (document.getElementById('handover_name') ? document.getElementById('handover_name').value.trim() : '');
+                var handoverPhone = (signDetails && signDetails.handover && signDetails.handover.phone) ? signDetails.handover.phone : 
+                                    (document.getElementById('handover_phone') ? document.getElementById('handover_phone').value.trim() : '');
+                var receivedName = (signDetails && signDetails.received && signDetails.received.name) ? signDetails.received.name : 
+                                   (document.getElementById('received_name') ? document.getElementById('received_name').value.trim() : '');
+                var receivedPhone = (signDetails && signDetails.received && signDetails.received.phone) ? signDetails.received.phone : 
+                                    (document.getElementById('received_phone') ? document.getElementById('received_phone').value.trim() : '');
+
+                doc.text("Hand Over by: " + handoverName, leftX, yPos);
+                doc.text("Received by: " + receivedName, rightX, yPos);
+
+                yPos += 28;
+                doc.text("Phone Number: " + handoverPhone, leftX, yPos);
+                doc.text("Phone Number: " + receivedPhone, rightX, yPos);
+
+                yPos += 28;
+                doc.text("Signature: {{Signature:Recipient1*}}", leftX, yPos);
+                doc.text("Signature: {{Signature:Recipient2*}}", rightX, yPos);
+
+                yPos += 40;
+
+                // Draw Footer on all pages
+                var totalPages = doc.internal.getNumberOfPages();
+                for (var i = 1; i <= totalPages; i++) {
+                  doc.setPage(i);
+                  var footerY = pageH - 35;
+
+                  // Slight top border for the footer
                   doc.setDrawColor(229, 231, 235); // #e5e7eb
                   doc.setLineWidth(1);
-                  doc.roundedRect(tableX, yPos, tableW, rowH - 4, 6, 6, 'FD');
+                  doc.line(margin, footerY - 15, pageW - margin, footerY - 15);
 
-                  // Left color stripe
-                  doc.setFillColor(colorRgb.r, colorRgb.g, colorRgb.b);
-                  doc.roundedRect(tableX, yPos, 8, rowH - 4, 6, 6, 'F');
-                  // Square off right side of stripe
-                  doc.rect(tableX + 4, yPos, 4, rowH - 4, 'F');
-
-                  var textX = tableX + 20;
-                  var textY = yPos + 18;
-
-                  // Issue Code & Category
-                  doc.setFontSize(11);
-                  doc.setFont('helvetica', 'bold');
-                  doc.setTextColor(31, 41, 55);
-                  doc.text(issueCode + ' — ' + mark.category, textX, textY);
-                  
-                  // Location badge/text (right aligned)
-                  doc.setFontSize(9);
-                  doc.setFont('helvetica', 'normal');
-                  doc.setTextColor(107, 114, 128);
-                  var locationText = 'Loc: ' + formatPartName(mark.partId || '');
-                  var locW = doc.getTextWidth(locationText);
-                  doc.text(locationText, tableX + tableW - locW - 10, textY);
-                  
-                  textY += 16;
-                  
-                  // Comment lines
-                  doc.setFontSize(10);
-                  doc.setFont('helvetica', 'normal');
-                  doc.setTextColor(75, 85, 99);
-                  doc.text(commentLines, textX, textY);
-                  textY += commentLines.length * 12 + 6;
-                  
-                  // Draw image if exists
-                  if (mark._preloadedImage && mark._preloadedImage.dataUrl) {
-                    doc.setDrawColor(200, 200, 200);
-                    doc.setLineWidth(1);
-                    doc.rect(textX - 1, textY - 1, imgW + 2, imgH + 2);
-                    doc.addImage(mark._preloadedImage.dataUrl, 'PNG', textX, textY, imgW, imgH);
+                  // Left Logo (Moved from header)
+                  if (kgbLogo) {
+                    var aspect2 = kgbLogo.width / kgbLogo.height;
+                    var h2 = 28;
+                    var w2 = h2 * aspect2;
+                    doc.addImage(kgbLogo.dataUrl, 'PNG', margin, footerY - 8, w2, h2);
                   }
-                  
-                  yPos += rowH + 6;
+
+                  // Right side contact information
+                  doc.setFontSize(8.5);
+                  doc.setFont('helvetica', 'normal');
+                  doc.setTextColor(156, 163, 175); // Lighter gray
+
+                  var phoneVal = "+971 4 3782222";
+                  var addrVal = "Sheikh Zayed Road-Dubai, UAE-PO.Box 2942740";
+
+                  var rightEdge = pageW - margin;
+                  var pW = doc.getTextWidth(phoneVal);
+                  var iconW = 9;
+                  var iconH = 9;
+
+                  // Line 1: Address and Phone
+                  doc.text(phoneVal, rightEdge - pW, footerY);
+                  if (phoneIcon) doc.addImage(phoneIcon.dataUrl, 'PNG', rightEdge - pW - 13, footerY - 7.5, iconW, iconH);
+                  var addrW = doc.getTextWidth(addrVal);
+                  doc.text(addrVal, rightEdge - pW - 22 - addrW, footerY);
+
+                  // Line 2: Email, Web, Social
+                  var l2Y = footerY + 12;
+                  var socialVal = "alainclassmotors";
+                  var webVal = "www.alainclass.com";
+                  var emailVal = "info@alainclass.com";
+
+                  // Social (rightmost) - Instagram, Facebook, YouTube
+                  var sW = doc.getTextWidth(socialVal);
+                  doc.text(socialVal, rightEdge - sW, l2Y);
+
+                  var icon1X = rightEdge - sW - 13;
+                  if (socialIcon) doc.addImage(socialIcon.dataUrl, 'PNG', icon1X, l2Y - 7.5, iconW, iconH);
+
+                  var icon2X = icon1X - 12;
+                  if (fbIcon) doc.addImage(fbIcon.dataUrl, 'PNG', icon2X, l2Y - 7.5, iconW, iconH);
+
+                  var icon3X = icon2X - 12.5; // Slightly wider icon spacing for youtube
+                  if (ytIcon) doc.addImage(ytIcon.dataUrl, 'PNG', icon3X, l2Y - 7.5, iconW + 1, iconH);
+
+                  // Web (middle)
+                  var curX = icon3X - 14;
+                  var wW = doc.getTextWidth(webVal);
+                  doc.text(webVal, curX - wW, l2Y);
+                  if (webIcon) doc.addImage(webIcon.dataUrl, 'PNG', curX - wW - 13, l2Y - 7.5, iconW, iconH);
+
+                  // Email (leftmost)
+                  curX = curX - wW - 22;
+                  var eW = doc.getTextWidth(emailVal);
+                  doc.text(emailVal, curX - eW, l2Y);
+                  if (emailIcon) doc.addImage(emailIcon.dataUrl, 'PNG', curX - eW - 13, l2Y - 7.5, iconW, iconH);
+                }
+
+                return doc;
+              }
+
+              function hexToRgb(hex) {
+                var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? {
+                  r: parseInt(result[1], 16),
+                  g: parseInt(result[2], 16),
+                  b: parseInt(result[3], 16)
+                } : { r: 100, g: 116, b: 139 };
+              }
+
+
+
+      function triggerPdfGeneration(options) {
+        options = options || {};
+        var shouldSkipDownload = Boolean(options.skipDownload);
+
+        updateStatus('Generating PDF report...');
+        captureInspectionCanvasReliable().then(function (canvas) {
+          var imgDataUrl = canvasToOptimizedDataUrl(canvas, 0.52, 1200);
+          var issueMarks = getAllMarks().filter(function (m) { return Boolean(m.category); });
+
+          function loadImg(src) {
+            return new Promise(function(resolve) {
+              var img = new Image();
+              img.crossOrigin = 'Anonymous';
+              img.onload = function() {
+                var originalWidth = img.width;
+                var originalHeight = img.height;
+                var maxDimension = 1200;
+                var scale = Math.min(maxDimension / originalWidth, maxDimension / originalHeight, 1);
+                var cvs = document.createElement('canvas');
+                cvs.width = Math.max(1, Math.round(originalWidth * scale));
+                cvs.height = Math.max(1, Math.round(originalHeight * scale));
+                var ctx = cvs.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, cvs.width, cvs.height);
+                ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
+                resolve({
+                  dataUrl: cvs.toDataURL('image/jpeg', 0.52),
+                  width: cvs.width,
+                  height: cvs.height
                 });
-              }
+              };
+              img.onerror = function() { resolve(null); };
+              img.src = src;
+            });
+          }
 
-              // Draw Footer on all pages
-              var totalPages = doc.internal.getNumberOfPages();
-              for (var i = 1; i <= totalPages; i++) {
-                doc.setPage(i);
-                var footerY = pageH - 40;
-                
-                // Slight top border for the footer
-                doc.setDrawColor(229, 231, 235); // #e5e7eb
-                doc.setLineWidth(1);
-                doc.line(margin, footerY - 15, pageW - margin, footerY - 15);
-                
-                doc.setFontSize(9);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(156, 163, 175); // #9ca3af (Lighter gray simulating lower opacity)
-                
-                doc.text('Al Ain Class Motors, Sheikh Zayed Road, Dubai, United Arab Emirates', pageW / 2, footerY, { align: 'center' });
-                doc.text('TRN-100011508700003, P. O Box 294274, Tel. No. +971 4 3782222', pageW / 2, footerY + 12, { align: 'center' });
-                doc.text('Email: info@alainclass.com - Website: www.alainclass.com', pageW / 2, footerY + 24, { align: 'center' });
-              }
+          var preloadPromises = [
+            loadImg('assets/Alain_Logo.png'),
+            loadImg('assets/Koenigsegg_Logo.png')
+          ];
 
-              return doc;
+          issueMarks.forEach(function(m) {
+            if (m.attachmentImageData) {
+              preloadPromises.push(loadImg(m.attachmentImageData));
+            } else if (m.attachmentImageEncryptedId) {
+              preloadPromises.push(
+                fetchImageFromCrm(m.attachmentImageEncryptedId, m.crmLineItemId)
+                  .then(function(b64) {
+                    if (!b64) return null;
+                    m.attachmentImageData = b64;
+                    return loadImg(b64);
+                  })
+                  .catch(function() { return null; })
+              );
+            } else if (m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url)) {
+              var localUrl = m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url);
+              preloadPromises.push(loadImg(localUrl));
+            }
+          });
+
+          Promise.all(preloadPromises).then(function(loadedImages) {
+            var alainLogo = loadedImages[0];
+            var kgbLogo = loadedImages[1];
+
+            var issueImgIdx = 2;
+            issueMarks.forEach(function(m) {
+              var hasImg = m.attachmentImageData || m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url) || m.attachmentImageEncryptedId;
+              if (hasImg) {
+                m._preloadedImage = loadedImages[issueImgIdx++];
+              }
+            });
+
+            function buildAndDownloadPdf(jsPDF) {
+              return createInspectionDocument(jsPDF, {
+                canvas: canvas,
+                issueMarks: issueMarks,
+                alainLogo: alainLogo,
+                kgbLogo: kgbLogo,
+                signDetails: null
+              });
             }
 
             function hexToRgb(hex) {
@@ -10466,9 +10873,10 @@
 
             function downloadAndAttachPdf(doc) {
               var pdfName = 'inspection-report-' + (crmState.recordId || 'report') + '.pdf';
-              doc.save(pdfName);
+              if (!shouldSkipDownload) {
+                doc.save(pdfName);
+              }
 
-              // Attach to CRM record
               var zoho = getZohoSdk();
               if (zoho && crmState.recordId) {
                 updateStatus('Attaching PDF to CRM record...');
@@ -10488,7 +10896,6 @@
               }
             }
 
-            // Load jsPDF from CDN if not already available
             if (window.jspdf && window.jspdf.jsPDF) {
               var doc = buildAndDownloadPdf(window.jspdf.jsPDF);
               downloadAndAttachPdf(doc);
@@ -10512,552 +10919,392 @@
               };
               document.head.appendChild(jsPdfScript);
             }
-          }); // Close Promise.all().then
-          }).catch(function (err) {
-            updateStatus('Failed to generate report: ' + (err && err.message ? err.message : String(err)), true);
           });
+        }).catch(function (err) {
+          updateStatus('Failed to generate report: ' + (err && err.message ? err.message : String(err)), true);
+        });
+      }
+
+      // ── Generate Report button ─────────────────────────────────────────
+      if (generateReportButton) {
+        generateReportButton.addEventListener('click', function () {
+          triggerPdfGeneration({ skipDownload: false, isForSign: false });
         });
       }
       // ── End Generate Report / Save Image ──────────────────────────────
 
       // ── Send for Sign Button ──────────────────────────────────────────
       var sendForSignButton = document.getElementById('sendForSignButton');
+      var signDetailsModal = document.getElementById('signDetailsModal');
+      var signDetailsForm = document.getElementById('signDetailsForm');
+      var signDetailsError = document.getElementById('signDetailsError');
+      var closeSignDetailsButton = document.getElementById('closeSignDetailsModal');
+      var cancelSignDetailsButton = document.getElementById('cancelSignDetailsModal');
 
-      if (sendForSignButton) {
-        sendForSignButton.addEventListener('click', function () {
-          updateStatus('Preparing document for signature...');
-          
-          captureInspectionCanvasReliable().then(function (canvas) {
-            var imgDataUrl = canvas.toDataURL('image/png');
-            var issueMarks = getAllMarks().filter(function (m) { return Boolean(m.category); });
+      function openSignDetailsModal() {
+        if (!signDetailsModal || !signDetailsForm) { return; }
+        signDetailsForm.reset();
+        if (signDetailsError) { signDetailsError.textContent = ''; }
+        signDetailsModal.style.display = 'flex';
+        signDetailsModal.setAttribute('aria-hidden', 'false');
+      }
 
-            // Helper to preload images as base64
-            function loadImg(src) {
-              return new Promise(function(resolve) {
-                var img = new Image();
-                img.crossOrigin = 'Anonymous';
-                img.onload = function() { 
-                  var cvs = document.createElement('canvas');
-                  cvs.width = img.width;
-                  cvs.height = img.height;
-                  var ctx = cvs.getContext('2d');
-                  ctx.drawImage(img, 0, 0);
-                  resolve({
-                    dataUrl: cvs.toDataURL('image/png'),
-                    width: img.width,
-                    height: img.height
-                  });
-                };
-                img.onerror = function() { resolve(null); };
-                img.src = src;
-              });
+      function closeSignDetailsModal() {
+        if (!signDetailsModal) { return; }
+        signDetailsModal.style.display = 'none';
+        signDetailsModal.setAttribute('aria-hidden', 'true');
+      }
+
+      function getNormalizedSignInput(rawValue) {
+        return (rawValue === null || rawValue === undefined) ? '' : String(rawValue).trim();
+      }
+
+      function validateSignDetailsForm() {
+        var handover = {
+          name: getNormalizedSignInput(document.getElementById('handoverName').value),
+          phone: getNormalizedSignInput(document.getElementById('handoverPhone').value),
+          email: getNormalizedSignInput(document.getElementById('handoverEmail').value)
+        };
+        var received = {
+          name: getNormalizedSignInput(document.getElementById('receivedName').value),
+          phone: getNormalizedSignInput(document.getElementById('receivedPhone').value),
+          email: getNormalizedSignInput(document.getElementById('receivedEmail').value)
+        };
+
+        var requiredFields = [
+          { key: 'handover.name', label: 'Handover by name', value: handover.name },
+          { key: 'handover.phone', label: 'Handover by phone', value: handover.phone },
+          { key: 'handover.email', label: 'Handover by email', value: handover.email },
+          { key: 'received.name', label: 'Received by name', value: received.name },
+          { key: 'received.phone', label: 'Received by phone', value: received.phone },
+          { key: 'received.email', label: 'Received by email', value: received.email }
+        ];
+
+        var missingField = requiredFields.find(function (field) {
+          return !field.value;
+        });
+
+        if (missingField) {
+          if (signDetailsError) {
+            signDetailsError.textContent = 'Please complete all required fields for ' + missingField.label + '.';
+          }
+          return null;
+        }
+
+        var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(handover.email) || !emailPattern.test(received.email)) {
+          if (signDetailsError) {
+            signDetailsError.textContent = 'Please enter valid email addresses for both signatory contacts.';
+          }
+          return null;
+        }
+
+        return {
+          handover: handover,
+          received: received
+        };
+      }
+
+      function startSignatureRequest(signDetails) {
+        updateStatus('Preparing document for signature...');
+
+        captureInspectionCanvasReliable().then(function (canvas) {
+          var imgDataUrl = canvasToOptimizedDataUrl(canvas, 0.52, 1200);
+          var issueMarks = getAllMarks().filter(function (m) { return Boolean(m.category); });
+
+          function loadImg(src) {
+            return new Promise(function(resolve) {
+              var img = new Image();
+              img.crossOrigin = 'Anonymous';
+              img.onload = function() {
+                var originalWidth = img.width;
+                var originalHeight = img.height;
+                var maxDimension = 1200;
+                var scale = Math.min(maxDimension / originalWidth, maxDimension / originalHeight, 1);
+                var cvs = document.createElement('canvas');
+                cvs.width = Math.max(1, Math.round(originalWidth * scale));
+                cvs.height = Math.max(1, Math.round(originalHeight * scale));
+                var ctx = cvs.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, cvs.width, cvs.height);
+                ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
+                resolve({
+                  dataUrl: cvs.toDataURL('image/jpeg', 0.52),
+                  width: cvs.width,
+                  height: cvs.height
+                });
+              };
+              img.onerror = function() { resolve(null); };
+              img.src = src;
+            });
+          }
+
+          var preloadPromises = [
+            loadImg('assets/Alain_Logo.png'),
+            loadImg('assets/Koenigsegg_Logo.png')
+          ];
+
+          issueMarks.forEach(function(m) {
+            if (m.attachmentImageData) {
+              preloadPromises.push(loadImg(m.attachmentImageData));
+            } else if (m.attachmentImageEncryptedId) {
+              preloadPromises.push(
+                fetchImageFromCrm(m.attachmentImageEncryptedId, m.crmLineItemId)
+                  .then(function(b64) {
+                    if (!b64) return null;
+                    m.attachmentImageData = b64;
+                    return loadImg(b64);
+                  })
+                  .catch(function() { return null; })
+              );
+            } else if (m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url)) {
+              var localUrl = m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url);
+              preloadPromises.push(loadImg(localUrl));
             }
+          });
 
-            var preloadPromises = [
-              loadImg('assets/Alain_Logo.png'),
-              loadImg('assets/Koenigsegg_Logo.png')
-            ];
-            
+          Promise.all(preloadPromises).then(function(loadedImages) {
+            var alainLogo = loadedImages[0];
+            var kgbLogo = loadedImages[1];
+
+            var issueImgIdx = 2;
             issueMarks.forEach(function(m) {
-              if (m.attachmentImageData) {
-                 preloadPromises.push(loadImg(m.attachmentImageData)); 
-              } else if (m.attachmentImageEncryptedId) {
-                 preloadPromises.push(
-                    fetchImageFromCrm(m.attachmentImageEncryptedId, m.crmLineItemId)
-                      .then(function(b64) {
-                         if (!b64) return null;
-                         m.attachmentImageData = b64; 
-                         return loadImg(b64);
-                      })
-                      .catch(function() { return null; })
-                 );
-              } else if (m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url)) {
-                 var localUrl = m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url);
-                 preloadPromises.push(loadImg(localUrl)); 
+              var hasImg = m.attachmentImageData || m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url) || m.attachmentImageEncryptedId;
+              if (hasImg) {
+                m._preloadedImage = loadedImages[issueImgIdx++];
               }
             });
 
-            Promise.all(preloadPromises).then(function(loadedImages) {
-              var alainLogo = loadedImages[0];
-              var kgbLogo = loadedImages[1];
-              
-              var issueImgIdx = 2;
-              issueMarks.forEach(function(m) {
-                var hasImg = m.attachmentImageData || m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url) || m.attachmentImageEncryptedId;
-                if (hasImg) {
-                  m._preloadedImage = loadedImages[issueImgIdx++];
-                }
+            function buildPdfForSign(jsPDF) {
+              return createInspectionDocument(jsPDF, {
+                canvas: canvas,
+                issueMarks: issueMarks,
+                alainLogo: alainLogo,
+                kgbLogo: kgbLogo,
+                signDetails: signDetails
               });
+            }
 
-              // Build PDF using jsPDF (reuse the same logic from Generate Report)
-              function buildPdfForSign(jsPDF) {
-                var doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-                var pageW = doc.internal.pageSize.getWidth();
-                var pageH = doc.internal.pageSize.getHeight();
-                var margin = 40;
-                var now = new Date();
-                var recordData = crmState.recordData || {};
+            function hexToRgb(hex) {
+              var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+              return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+              } : { r: 100, g: 116, b: 139 };
+            }
 
-                function getFieldValue(value) {
-                  if (value === null || value === undefined) return '';
-                  if (typeof value === 'string') return value;
-                  if (typeof value === 'number') return String(value);
-                  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-                  if (typeof value === 'object') {
-                    if (value.name) return String(value.name);
-                    if (value.display_value) return String(value.display_value);
-                    return '';
-                  }
-                  return String(value);
-                }
+            function invokeZohoSignRequest(payload) {
+              var zoho = getZohoSdk() || window.ZOHO;
+              var connector = zoho && zoho.CRM && zoho.CRM.CONNECTOR;
+              var api = zoho && zoho.CRM && zoho.CRM.API;
+              var http = zoho && zoho.CRM && zoho.CRM.HTTP;
+              var connection = zoho && zoho.CRM && zoho.CRM.CONNECTION;
+              var namespaceCandidates = [
+                'zoho.sign.create_request',
+                'zoho.sign.createRequest',
+                'ZohoSign.create_request',
+                'ZohoSign.createRequest'
+              ];
+              var candidateCalls = [];
 
-                function drawHeaderBanner() {
-                  if (alainLogo) {
-                    var aspect1 = alainLogo.width / alainLogo.height;
-                    var h1 = 36;
-                    var w1 = h1 * aspect1;
-                    doc.addImage(alainLogo.dataUrl, 'PNG', margin, 17, w1, h1);
-                  }
-                  if (kgbLogo) {
-                    var aspect2 = kgbLogo.width / kgbLogo.height;
-                    var h2 = 36;
-                    var w2 = h2 * aspect2;
-                    doc.addImage(kgbLogo.dataUrl, 'PNG', pageW - margin - w2, 17, w2, h2);
-                  }
-                }
-
-                function drawSectionTitle(title, y) {
-                  doc.setFillColor(243, 244, 246);
-                  doc.rect(margin, y - 16, pageW - margin * 2, 24, 'F');
-                  doc.setTextColor(31, 41, 55);
-                  doc.setFontSize(12);
-                  doc.setFont('helvetica', 'bold');
-                  doc.text(title, margin + 10, y);
-                  return y + 16;
-                }
-
-                // Page 1 - Delivery Note
-                drawHeaderBanner();
-                
-                var yPos = 90;
-                doc.setTextColor(31, 41, 55);
-                doc.setFontSize(22);
-                doc.setFont('helvetica', 'bold');
-                doc.text('DELIVERY NOTE', pageW / 2, yPos, { align: 'center' });
-                yPos += 30;
-                
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(75, 85, 99);
-                var dateStr = now.toLocaleDateString();
-                var timeStr = now.toLocaleTimeString();
-                doc.text('Date: ' + dateStr, margin, yPos);
-                yPos += 18;
-                doc.text('Time: ' + timeStr, margin, yPos);
-                yPos += 18;
-                doc.text('Petrol Level: ' + getFieldValue(recordData.Petrol_Level), margin, yPos);
-                yPos += 30;
-
-                yPos = drawSectionTitle('VEHICLE DETAILS', yPos);
-                yPos += 15;
-                
-                var leftFields = [
-                  { label: 'Make', value: getFieldValue(recordData.Make) },
-                  { label: 'Exterior Colour', value: getFieldValue(recordData.Exterior_Color) },
-                  { label: 'Mileage', value: getFieldValue(recordData.Mileage) }
-                ];
-                var rightFields = [
-                  { label: 'Model', value: getFieldValue(recordData.Model) },
-                  { label: 'Year Model', value: getFieldValue(recordData.Year_Model) },
-                  { label: 'Interior Colour', value: getFieldValue(recordData.Interior_Color) }
-                ];
-
-                doc.setFontSize(10);
-                var detailsStartX = margin + 10;
-                var colWidth = (pageW - margin * 2) / 2;
-                
-                for (var i = 0; i < 3; i++) {
-                  doc.setFont('helvetica', 'bold');
-                  doc.setTextColor(31, 41, 55);
-                  doc.text(leftFields[i].label + ':', detailsStartX, yPos);
-                  doc.setFont('helvetica', 'normal');
-                  doc.setTextColor(75, 85, 99);
-                  doc.text(leftFields[i].value, detailsStartX + 90, yPos);
-                  
-                  doc.setFont('helvetica', 'bold');
-                  doc.setTextColor(31, 41, 55);
-                  doc.text(rightFields[i].label + ':', detailsStartX + colWidth, yPos);
-                  doc.setFont('helvetica', 'normal');
-                  doc.setTextColor(75, 85, 99);
-                  doc.text(rightFields[i].value, detailsStartX + colWidth + 90, yPos);
-                  
-                  yPos += 20;
-                }
-                
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(31, 41, 55);
-                doc.text('V.I.N Number:', detailsStartX, yPos);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(75, 85, 99);
-                doc.text(getFieldValue(recordData.VIN), detailsStartX + 90, yPos);
-                
-                yPos += 30;
-
-                yPos = drawSectionTitle('VEHICLE ITEMS', yPos);
-                yPos += 20;
-                
-                var vehicleItems = [
-                  { label: 'No. of Keys', value: recordData.Keys },
-                  { label: 'Plates', value: recordData.Plate_Number },
-                  { label: 'Reg. Card', value: recordData.Reg_Card },
-                  { label: 'VCC', value: recordData.VCC },
-                  { label: 'Export Cert/Hayaza', value: recordData.Export_Cert },
-                  { label: 'Service Book', value: recordData.Service_Book },
-                  { label: 'Manual Book', value: recordData.Manual_Book },
-                  { label: 'Car Cover', value: recordData.Car_Cover },
-                  { label: 'Car Charger', value: recordData.Charger },
-                  { label: 'Fire Extinguisher', value: recordData.Fire_Extinguisher },
-                  { label: 'Tool Kit', value: recordData.Tool_Kit },
-                  { label: 'Other Items', value: recordData.Included_Items }
-                ];
-
-                doc.setFontSize(10);
-                var itemStartX = margin + 10;
-                var numItemCols = 2;
-                var itemsPerCol = Math.ceil(vehicleItems.length / numItemCols);
-                var itemColWidth = (pageW - margin * 2) / numItemCols;
-                
-                var col0Y = yPos;
-                var col1Y = yPos;
-                
-                function drawIcon(x, y, isCheck) {
-                  var cy = y - 4;
-                  doc.setLineWidth(1.5);
-                  if (isCheck) {
-                    doc.setDrawColor(16, 185, 129);
-                    doc.line(x, cy - 1, x + 3, cy + 2);
-                    doc.line(x + 3, cy + 2, x + 8, cy - 5);
-                  } else {
-                    doc.setDrawColor(239, 68, 68);
-                    doc.line(x, cy - 4, x + 6, cy + 2);
-                    doc.line(x + 6, cy - 4, x, cy + 2);
-                  }
-                }
-
-                for (var i = 0; i < vehicleItems.length; i++) {
-                  var isCol0 = i < itemsPerCol;
-                  var currentX = isCol0 ? itemStartX : itemStartX + itemColWidth;
-                  var currentY = isCol0 ? col0Y : col1Y;
-                  
-                  var item = vehicleItems[i];
-                  var rawVal = item.value;
-                  
-                  doc.setFont('helvetica', 'bold');
-                  doc.setTextColor(31, 41, 55);
-                  doc.text(item.label + ':', currentX, currentY);
-                  
-                  var lblW = doc.getTextWidth(item.label + ': ');
-                  var valX = currentX + Math.max(lblW + 8, 110);
-                  
-                  var isBoolean = typeof rawVal === 'boolean' || rawVal === 'Yes' || rawVal === 'No';
-                  
-                  if (isBoolean) {
-                    var isTrue = rawVal === true || rawVal === 'Yes';
-                    drawIcon(valX, currentY, isTrue);
-                    currentY += 16;
-                  } else {
-                    var displayVal = (rawVal === null || rawVal === undefined || rawVal === '') ? 'N/A' : String(rawVal);
-                    doc.setFont('helvetica', 'normal');
-                    doc.setTextColor(75, 85, 99);
-                    if (displayVal !== 'N/A') { 
-                      doc.setTextColor(31, 41, 55); 
-                    }
-                    
-                    var maxTextW = itemColWidth - (valX - currentX) - 10;
-                    var splitText = doc.splitTextToSize(displayVal, maxTextW);
-                    
-                    doc.text(splitText, valX, currentY);
-                    currentY += (splitText.length * 12) + 10;
-                  }
-                  
-                  if (isCol0) {
-                    col0Y = currentY;
-                  } else {
-                    col1Y = currentY;
-                  }
-                }
-                
-                yPos = Math.max(col0Y, col1Y) + 10;
-
-                yPos = drawSectionTitle('VISUAL INSPECTION', yPos);
-                yPos += 15;
-                
-                var imgX = margin;
-                var imgMaxWidth = pageW - margin * 2;
-                var imgMaxHeight = pageH - yPos - margin - 45;
-                
-                var canvasAspect = canvas.width / canvas.height;
-                var imgDrawW = imgMaxWidth;
-                var imgDrawH = imgMaxWidth / canvasAspect;
-                
-                if (imgDrawH > imgMaxHeight) {
-                  if (imgMaxHeight > 100) {
-                    imgDrawH = imgMaxHeight;
-                    imgDrawW = imgMaxHeight * canvasAspect;
-                    imgX = margin + (imgMaxWidth - imgDrawW) / 2;
-                  } else {
-                    doc.addPage();
-                    drawHeaderBanner();
-                    yPos = 90;
-                    doc.setTextColor(31, 41, 55);
-                    doc.setFontSize(22);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('VISUAL INSPECTION (Cont.)', pageW / 2, yPos, { align: 'center' });
-                    yPos += 15;
-                    imgMaxHeight = pageH - yPos - margin - 45;
-                    imgDrawW = imgMaxWidth;
-                    imgDrawH = imgMaxWidth / canvasAspect;
-                    if (imgDrawH > imgMaxHeight) {
-                      imgDrawH = imgMaxHeight;
-                      imgDrawW = imgMaxHeight * canvasAspect;
-                      imgX = margin + (imgMaxWidth - imgDrawW) / 2;
-                    }
-                  }
-                } else {
-                   imgX = margin + (imgMaxWidth - imgDrawW) / 2;
-                }
-                
-                if (imgDrawH > 0) {
-                  doc.setDrawColor(229, 231, 235);
-                  doc.setLineWidth(2);
-                  doc.rect(imgX - 4, yPos - 4, imgDrawW + 8, imgDrawH + 8);
-                  doc.addImage(imgDataUrl, 'PNG', imgX, yPos, imgDrawW, imgDrawH);
-                }
-
-                // Page 2 - Issue Log
-                doc.addPage();
-                drawHeaderBanner();
-                
-                yPos = 90;
-                yPos = drawSectionTitle('ISSUE LOG', yPos);
-                yPos += 15;
-                
-                var tableX = margin;
-                var tableW = pageW - margin * 2;
-
-                doc.setFontSize(12);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(31, 41, 55);
-                doc.text('Total Issues Found: ' + issueMarks.length, tableX, yPos);
-                yPos += 20;
-
-                if (!issueMarks.length) {
-                  doc.setFontSize(11);
-                  doc.setFont('helvetica', 'italic');
-                  doc.setTextColor(107, 114, 128);
-                  doc.text('No issues logged in this inspection.', tableX, yPos);
-                } else {
-                  issueMarks.forEach(function (mark, idx) {
-                    var comment = normalizeCommentText(mark.comment) || 'No comment added.';
-                    var commentLines = doc.splitTextToSize(comment, tableW - 30);
-                    var rowH = 16 + 14 + commentLines.length * 12 + 10;
-                    
-                    var imgH = 0;
-                    var imgW = 0;
-                    if (mark._preloadedImage && mark._preloadedImage.dataUrl) {
-                      var aspect = mark._preloadedImage.width / mark._preloadedImage.height;
-                      imgW = 150;
-                      imgH = imgW / aspect;
-                      if (imgH > 100) { imgH = 100; imgW = imgH * aspect; }
-                      rowH += imgH + 15;
-                    }
-                    
-                    if (yPos + rowH > pageH - margin - 40) {
-                      doc.addPage();
-                      drawHeaderBanner();
-                      yPos = 90;
-                      yPos = drawSectionTitle('ISSUE LOG (Cont.)', yPos);
-                      yPos += 15;
-                    }
-
-                    var config = getDefectConfig(mark.category);
-                    var issueCode = getIssueCode(mark);
-                    var colorRgb = hexToRgb(config.color || '#64748b');
-
-                    doc.setFillColor(249, 250, 251);
-                    doc.setDrawColor(229, 231, 235);
-                    doc.setLineWidth(1);
-                    doc.roundedRect(tableX, yPos, tableW, rowH - 4, 6, 6, 'FD');
-
-                    doc.setFillColor(colorRgb.r, colorRgb.g, colorRgb.b);
-                    doc.roundedRect(tableX, yPos, 8, rowH - 4, 6, 6, 'F');
-                    doc.rect(tableX + 4, yPos, 4, rowH - 4, 'F');
-
-                    var textX = tableX + 20;
-                    var textY = yPos + 18;
-
-                    doc.setFontSize(11);
-                    doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(31, 41, 55);
-                    doc.text(issueCode + ' — ' + mark.category, textX, textY);
-                    
-                    doc.setFontSize(9);
-                    doc.setFont('helvetica', 'normal');
-                    doc.setTextColor(107, 114, 128);
-                    var locationText = 'Loc: ' + formatPartName(mark.partId || '');
-                    var locW = doc.getTextWidth(locationText);
-                    doc.text(locationText, tableX + tableW - locW - 10, textY);
-                    
-                    textY += 16;
-                    
-                    doc.setFontSize(10);
-                    doc.setFont('helvetica', 'normal');
-                    doc.setTextColor(75, 85, 99);
-                    doc.text(commentLines, textX, textY);
-                    textY += commentLines.length * 12 + 6;
-                    
-                    if (mark._preloadedImage && mark._preloadedImage.dataUrl) {
-                      doc.setDrawColor(200, 200, 200);
-                      doc.setLineWidth(1);
-                      doc.rect(textX - 1, textY - 1, imgW + 2, imgH + 2);
-                      doc.addImage(mark._preloadedImage.dataUrl, 'PNG', textX, textY, imgW, imgH);
-                    }
-                    
-                    yPos += rowH + 6;
+              function addNamespaceCalls(target, methodName) {
+                namespaceCandidates.forEach(function (namespace) {
+                  candidateCalls.push(function () {
+                    return target[methodName](namespace, payload);
                   });
-                }
-
-                // Footer on all pages
-                var totalPages = doc.internal.getNumberOfPages();
-                for (var i = 1; i <= totalPages; i++) {
-                  doc.setPage(i);
-                  var footerY = pageH - 40;
-                  
-                  doc.setDrawColor(229, 231, 235);
-                  doc.setLineWidth(1);
-                  doc.line(margin, footerY - 15, pageW - margin, footerY - 15);
-                  
-                  doc.setFontSize(9);
-                  doc.setFont('helvetica', 'normal');
-                  doc.setTextColor(156, 163, 175);
-                  
-                  doc.text('Al Ain Class Motors, Sheikh Zayed Road, Dubai, United Arab Emirates', pageW / 2, footerY, { align: 'center' });
-                  doc.text('TRN-100011508700003, P. O Box 294274, Tel. No. +971 4 3782222', pageW / 2, footerY + 12, { align: 'center' });
-                  doc.text('Email: info@alainclass.com - Website: www.alainclass.com', pageW / 2, footerY + 24, { align: 'center' });
-                }
-
-                return doc;
-              }
-
-              function hexToRgb(hex) {
-                var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-                return result ? {
-                  r: parseInt(result[1], 16),
-                  g: parseInt(result[2], 16),
-                  b: parseInt(result[3], 16)
-                } : { r: 100, g: 116, b: 139 };
-              }
-
-              function sendPdfToZohoSign(doc) {
-                updateStatus('Uploading to Zoho Sign...');
-
-                var zoho = getZohoSdk();
-                if (!zoho || !crmState.recordId) {
-                  updateStatus('CRM connection required for signing.', true);
-                  return;
-                }
-
-                if (!zoho.CRM || !zoho.CRM.API || typeof zoho.CRM.API.attachFile !== 'function') {
-                  updateStatus('CRM file attachment API is not available for signature sending.', true);
-                  return;
-                }
-
-                if (!zoho.CRM.CONNECTOR || typeof zoho.CRM.CONNECTOR.invokeAPI !== 'function') {
-                  updateStatus('Zoho Sign connector is not configured in this CRM session.', true);
-                  return;
-                }
-
-                var pdfBlob = doc.output('blob');
-                var pdfName = 'inspection-report-for-sign-' + (crmState.recordId || 'report') + '.pdf';
-
-                // Get recipient details from CRM record
-                var recipientEmail = crmState.recordData.Email || crmState.recordData.email || crmState.recordData.Email_Address || '';
-                var recipientName = crmState.recordData.Name || crmState.recordData.Full_Name || crmState.recordData.First_Name || 'Customer';
-
-                if (!recipientEmail) {
-                  updateStatus('No recipient email found in CRM record. Please add an email address before sending for signature.', true);
-                  return;
-                }
-
-                // First, attach the PDF to CRM record
-                zoho.CRM.API.attachFile({
-                  Entity: crmState.moduleName || CRM_MODULE_API_NAME,
-                  RecordID: crmState.recordId,
-                  File: { Name: pdfName, Content: pdfBlob }
-                }).then(function () {
-                  updateStatus('PDF attached to CRM. Creating signature request...');
-
-                  // Create Zoho Sign request
-                  var signRequest = {
-                    request_name: 'Vehicle Inspection Report - ' + (crmState.recordData.VIN || crmState.recordId),
-                    actions: [{
-                      recipient_email: recipientEmail,
-                      recipient_name: recipientName,
-                      action_type: 'SIGN',
-                      private_notes: 'Please review and sign the vehicle inspection report.',
-                      signing_order: 1
-                    }],
-                    notes: 'Vehicle inspection report for ' + (crmState.recordData.VIN || 'vehicle'),
-                    expiration_days: 30
-                  };
-
-                  return zoho.CRM.CONNECTOR.invokeAPI(
-                    'zoho.sign.create_request',
-                    signRequest
-                  );
-                }).then(function (signResponse) {
-                  updateStatus('Document sent for signature successfully!');
-                  console.log('[Send for Sign] Sign request created:', signResponse);
-                }).catch(function (err) {
-                  crmState.lastError = err && err.message ? err.message : String(err || '');
-                  console.error('[Send for Sign] Error:', crmState.lastError);
-
-                  if (err && err.message && err.message.indexOf('CONNECTOR') > -1) {
-                    updateStatus('PDF attached to CRM. Zoho Sign connector is not configured or the request failed. Please set up Zoho Sign integration.', true);
-                  } else {
-                    updateStatus('Failed to send for signature: ' + crmState.lastError + '. PDF has been attached to CRM record.', true);
-                  }
                 });
               }
 
-              // Load jsPDF and build/send PDF
-              if (window.jspdf && window.jspdf.jsPDF) {
-                var doc = buildPdfForSign(window.jspdf.jsPDF);
-                sendPdfToZohoSign(doc);
-              } else if (window.jsPDF) {
-                var doc = buildPdfForSign(window.jsPDF);
-                sendPdfToZohoSign(doc);
-              } else {
-                var jsPdfScript = document.createElement('script');
-                jsPdfScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-                jsPdfScript.onload = function () {
-                  var JsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
-                  if (!JsPDF) {
-                    updateStatus('Could not load PDF library. Please check your network connection.', true);
+              if (connector && typeof connector.invokeAPI === 'function') {
+                addNamespaceCalls(connector, 'invokeAPI');
+              }
+
+              if (api && typeof api.invokeConnector === 'function') {
+                addNamespaceCalls(api, 'invokeConnector');
+              }
+
+              if (http && typeof http.post === 'function') {
+                namespaceCandidates.forEach(function (namespace) {
+                  candidateCalls.push(function () {
+                    return http.post({
+                      url: 'https://crm.zoho.com/market/api/connectorAPI/execute.do',
+                      type: 'POST',
+                      data: payload,
+                      params: { nameSpace: namespace }
+                    });
+                  });
+                  candidateCalls.push(function () {
+                    return http.post('https://crm.zoho.com/market/api/connectorAPI/execute.do?nameSpace=' + encodeURIComponent(namespace), payload);
+                  });
+                });
+              }
+
+              if (connection && typeof connection.makeRequest === 'function') {
+                namespaceCandidates.forEach(function (namespace) {
+                  candidateCalls.push(function () {
+                    return connection.makeRequest({
+                      method: 'POST',
+                      url: 'https://crm.zoho.com/market/api/connectorAPI/execute.do',
+                      params: { nameSpace: namespace },
+                      data: payload
+                    });
+                  });
+                });
+              }
+
+              if (!candidateCalls.length) {
+                return Promise.reject(new Error('Zoho Sign connector is not configured in this CRM session.'));
+              }
+
+              return new Promise(function (resolve, reject) {
+                var index = 0;
+
+                function tryNext(previousError) {
+                  if (index >= candidateCalls.length) {
+                    var errorText = previousError && previousError.message ? previousError.message : String(previousError || 'Zoho Sign request creation failed.');
+                    if (errorText && errorText.toLowerCase().indexOf('401') > -1 || errorText && errorText.toLowerCase().indexOf('unauthorized') > -1) {
+                      reject(new Error('Zoho Sign authorization failed. Please enable and grant access to the Zoho Sign connector in this CRM account before sending the document.'));
+                    } else {
+                      reject(previousError || new Error('Zoho Sign request creation failed.'));
+                    }
                     return;
                   }
-                  var doc = buildPdfForSign(JsPDF);
-                  sendPdfToZohoSign(doc);
-                };
-                jsPdfScript.onerror = function () {
-                  updateStatus('Failed to load PDF library. Check network connection.', true);
-                };
-                document.head.appendChild(jsPdfScript);
+
+                  var currentCall = candidateCalls[index];
+                  index += 1;
+
+                  Promise.resolve()
+                    .then(currentCall)
+                    .then(resolve)
+                    .catch(function (err) {
+                      tryNext(err);
+                    });
+                }
+
+                tryNext();
+              });
+            }
+
+            function sendPdfToZohoSign(doc, signDetails) {
+              updateStatus('Uploading to Zoho Sign...');
+
+              var zoho = getZohoSdk();
+              if (!zoho || !crmState.recordId) {
+                updateStatus('CRM connection required for signing.', true);
+                return;
               }
-            }); // Close Promise.all().then
-          }).catch(function (err) {
-            updateStatus('Failed to prepare document for signature: ' + (err && err.message ? err.message : String(err)), true);
+
+              if (!zoho.CRM || !zoho.CRM.API || typeof zoho.CRM.API.attachFile !== 'function') {
+                updateStatus('CRM file attachment API is not available for signature sending.', true);
+                return;
+              }
+
+              var pdfBlob = doc.output('blob');
+              var pdfName = 'inspection-report-for-sign-' + (crmState.recordId || 'report') + '.pdf';
+
+              var recordData = crmState.recordData || {};
+              var recipient = signDetails && signDetails.received ? signDetails.received : {};
+              var recipientEmail = getNormalizedSignInput(recipient.email || recordData.Email || recordData.email || recordData.Email_Address || recordData.email_address || '');
+              var recipientName = getNormalizedSignInput(recipient.name || recordData.Name || recordData.Full_Name || recordData.First_Name || recordData.FirstName || 'Customer');
+              var handover = signDetails && signDetails.handover ? signDetails.handover : {};
+
+              if (!recipientEmail) {
+                updateStatus('No recipient email found in CRM record or the popup form. Please add an email address before sending for signature.', true);
+                return;
+              }
+
+              zoho.CRM.API.attachFile({
+                Entity: crmState.moduleName || CRM_MODULE_API_NAME,
+                RecordID: crmState.recordId,
+                File: { Name: pdfName, Content: pdfBlob }
+              }).then(function (res) {
+                updateStatus('PDF attached to CRM. Triggering Zoho Sign dispatch...');
+
+                var payload = {
+                    record_id: crmState.recordId,
+                    attachment_id: (res && res.data && res.data[0] && res.data[0].details ? res.data[0].details.id : ""),
+                    handover_name: handover.name || '',
+                    handover_phone: handover.phone || '',
+                    handover_email: handover.email || '',
+                    received_name: recipientName || '',
+                    received_phone: recipient.phone || '',
+                    received_email: recipientEmail || ''
+                };
+                
+                var functionSettings = {
+                    arguments: JSON.stringify({ req: payload })
+                };
+                
+                return zoho.CRM.FUNCTIONS.execute("sendforsign", functionSettings);
+              }).then(function(res2) {
+                  if (res2 && res2.code && res2.code.toUpperCase() === "SUCCESS") {
+                      updateStatus('Document sent for signature successfully!', false);
+                      console.log('[Send for Sign] Sign request created:', res2);
+                  } else {
+                      throw new Error('Error from CRM function: ' + JSON.stringify(res2));
+                  }
+              }).catch(function (err) {
+                crmState.lastError = err && err.message ? err.message : String(err || '');
+                console.error('[Send for Sign] Error:', crmState.lastError);
+                updateStatus('Failed to send for signature: ' + crmState.lastError + '. PDF has been attached to CRM record.', true);
+              });
+            }
+
+            if (window.jspdf && window.jspdf.jsPDF) {
+              var doc = buildPdfForSign(window.jspdf.jsPDF);
+              sendPdfToZohoSign(doc, signDetails);
+            } else if (window.jsPDF) {
+              var doc = buildPdfForSign(window.jsPDF);
+              sendPdfToZohoSign(doc, signDetails);
+            } else {
+              var jsPdfScript = document.createElement('script');
+              jsPdfScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+              jsPdfScript.onload = function () {
+                var JsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+                if (!JsPDF) {
+                  updateStatus('Could not load PDF library. Please check your network connection.', true);
+                  return;
+                }
+                var doc = buildPdfForSign(JsPDF);
+                sendPdfToZohoSign(doc, signDetails);
+              };
+              jsPdfScript.onerror = function () {
+                updateStatus('Failed to load PDF library. Check network connection.', true);
+              };
+              document.head.appendChild(jsPdfScript);
+            }
           });
+        }).catch(function (err) {
+          updateStatus('Failed to prepare document for signature: ' + (err && err.message ? err.message : String(err)), true);
+        });
+      }
+
+      if (sendForSignButton) {
+        sendForSignButton.addEventListener('click', function () {
+          openSignDetailsModal();
+        });
+      }
+
+      if (closeSignDetailsButton) {
+        closeSignDetailsButton.addEventListener('click', function () {
+          closeSignDetailsModal();
+        });
+      }
+
+      if (cancelSignDetailsButton) {
+        cancelSignDetailsButton.addEventListener('click', function () {
+          closeSignDetailsModal();
+        });
+      }
+
+      if (signDetailsForm) {
+        signDetailsForm.addEventListener('submit', function (event) {
+          event.preventDefault();
+          var signDetails = validateSignDetailsForm();
+          if (!signDetails) { return; }
+          closeSignDetailsModal();
+          startSignatureRequest(signDetails);
         });
       }
       // ── End Send for Sign Button ──────────────────────────────────────
