@@ -1098,6 +1098,10 @@
       font-size: 10px;
       line-height: 1;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
     }
 
     .comment-card-button.primary {
@@ -2158,7 +2162,7 @@
 
       /* ── Issue log internals ──────────────────────────────────────── */
       .issue-log-header {
-        padding: 16px 14px 12px;
+        padding: 16px 14px 12px 64px;
         background: #ffffff !important;
         border-bottom: 1px solid rgba(124, 92, 67, 0.3);
       }
@@ -2182,7 +2186,7 @@
 
       /* Better touch targets for issue items */
       .issue-log-item {
-        grid-template-columns: 28px 1fr;
+        grid-template-columns: 28px 1fr 52px;
         gap: 10px;
         padding: 12px 12px 12px 10px;
         min-height: 80px;
@@ -2562,6 +2566,8 @@
   <div class="shell">
     <section class="card map-stage">
       <div class="canvas-shell">
+        <!-- Mobile: Backdrop behind the drawer -->
+        <div class="mobile-drawer-backdrop" id="mobileDrawerBackdrop"></div>
         <aside class="issue-log-panel" aria-label="Issue log">
           <div class="issue-log-header">
             <h2 class="issue-log-title">Issue Log</h2>
@@ -2692,8 +2698,7 @@
           </div>
           <div class="comment-card-actions" style="justify-content: flex-start; gap: 8px; display: flex; width: 100%;">
             <input type="file" id="commentImageInput" accept="image/*" capture="environment" style="display: none;" />
-            <button class="comment-card-button" id="commentImageBtn" data-tooltip="Attach Image" type="button"
-              style="padding: 4px 8px;">
+            <button class="comment-card-button" id="commentImageBtn" data-tooltip="Attach Image" type="button" style="min-width: unset; padding: 0 8px;">
               <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"
                 stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -2743,7 +2748,7 @@
               <input type="file" id="inlineCommentImageInput" accept="image/*" capture="environment"
                 style="display: none;" />
               <button class="inline-comment-button" id="inlineCommentImageBtn" data-tooltip="Attach Image" type="button"
-                style="padding: 2px 6px;">
+                style="padding: 2px 6px; min-width: unset;">
                 <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"
                   stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -2783,9 +2788,7 @@
     </svg>
   </button>
 
-  <!-- Mobile: Backdrop behind the drawer -->
-  <div class="mobile-drawer-backdrop" id="mobileDrawerBackdrop"></div>
-
+  <!-- Mobile: Backdrop relocated to .canvas-shell to fix stacking context -->
   <!-- Mobile: Part full-view modal -->
   <div class="mobile-part-modal-backdrop" id="mobilePartModal" style="display:none;" aria-modal="true" role="dialog"
     aria-label="Part detail view">
@@ -3877,7 +3880,7 @@
 
             // If replacing, append the replacement image payload securely onto the row
             if (imageNeedsReplace && mark.attachmentImageEncryptedId) {
-              row['Upload_Image'] = [mark.attachmentImageEncryptedId];
+              row['Upload_Image'] = [{ Encrypted_Id: mark.attachmentImageEncryptedId }];
             } else {
               // Deleting without replacement — no image on the row
               row['Upload_Image'] = null;
@@ -3889,8 +3892,8 @@
             mark._deletedImageId = null;
             mark._imageNeedsCrmReplace = false;
           } else if (hasNewImage && mark.attachmentImageEncryptedId) {
-            // Provide the uploaded file's encrypted ID directly to link it to this subform row
-            row['Upload_Image'] = [mark.attachmentImageEncryptedId];
+            // Provide the uploaded file's encrypted ID securely wrapped
+            row['Upload_Image'] = [{ Encrypted_Id: mark.attachmentImageEncryptedId }];
           }
 
           // Neutralize legacy localStorage phantom flags
@@ -8850,12 +8853,66 @@
       function handleImageUpload(inputElement, callback) {
         if (!inputElement.files || !inputElement.files[0]) return;
         var file = inputElement.files[0];
-        var reader = new FileReader();
-        reader.onload = function (e) {
-          callback(e.target.result, file.name, file);
-          inputElement.value = '';
+
+        var readerForCanvas = new FileReader();
+        readerForCanvas.onload = function(e) {
+          var image = new Image();
+          
+          image.onload = function () {
+            try {
+              var MAX_WIDTH = 1200;
+              var MAX_HEIGHT = 1200;
+              var width = image.width;
+              var height = image.height;
+              if (width > height) {
+                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+              } else {
+                if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+              }
+              var canvas = document.createElement('canvas');
+              canvas.width = width;
+              canvas.height = height;
+              var ctx = canvas.getContext('2d');
+              ctx.drawImage(image, 0, 0, width, height);
+
+              var mimeType = 'image/jpeg';
+              var dataUrl = canvas.toDataURL(mimeType, 0.85);
+              var fileName = file.name;
+              if (fileName && fileName.indexOf('.') !== -1) {
+                fileName = fileName.substring(0, fileName.lastIndexOf('.')) + '.jpg';
+              } else {
+                fileName = (fileName || 'capture') + '.jpg';
+              }
+
+              var bin = atob(dataUrl.split(',')[1]);
+              var arr = new Uint8Array(bin.length);
+              for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+              var compressedBlob = new Blob([arr], { type: mimeType });
+              
+              var compressedFile;
+              try {
+                compressedFile = new File([compressedBlob], fileName, { type: mimeType });
+              } catch (err) {
+                compressedFile = compressedBlob;
+                compressedFile.name = fileName;
+              }
+              callback(dataUrl, fileName, compressedFile);
+            } catch (err) {
+              // Fallback to raw data if canvas fails
+              callback(e.target.result, file.name || 'capture.jpg', file);
+            }
+            inputElement.value = '';
+          };
+          
+          image.onerror = function () {
+            // Not a readable image (e.g. PDF), just pass raw string and file
+            callback(e.target.result, file.name || 'attachment', file);
+            inputElement.value = '';
+          };
+
+          image.src = e.target.result;
         };
-        reader.readAsDataURL(file);
+        readerForCanvas.readAsDataURL(file);
       }
 
       if (inlineCommentImageBtn) {
@@ -8878,9 +8935,12 @@
               mark.attachmentImageEncryptedId = null;
               mark._imageNeedsCrmReplace = true;
               mark.attachmentOriginalFile = originalFile;
+              mark.attachmentImageData = data;
+              mark.attachmentImageName = name;
               if (mark.attachmentImages) mark.attachmentImages = [];
             }
             updateAttachmentPreview(inlineCommentAttachmentPreview, inlineCommentAttachmentName, data, name, null, inlineCommentImageBtn);
+            saveInlineCommentEditor();
           });
         });
         inlineCommentAttachmentRemove.addEventListener('click', function () {
@@ -8928,9 +8988,17 @@
               mark.attachmentImageEncryptedId = null;
               mark._imageNeedsCrmReplace = true;
               mark.attachmentOriginalFile = originalFile;
+              mark.attachmentImageData = data;
+              mark.attachmentImageName = name;
               if (mark.attachmentImages) mark.attachmentImages = [];
             }
             updateAttachmentPreview(commentAttachmentPreview, commentAttachmentName, data, name, null, commentImageBtn);
+            // Save the parent comment editor if open
+            if (typeof saveCommentEditor === 'function' && !inlineCommentMarkId) {
+              saveCommentEditor();
+            } else if (inlineCommentMarkId) {
+              saveInlineCommentEditor();
+            }
           });
         });
         commentAttachmentRemove.addEventListener('click', function () {
@@ -9949,7 +10017,12 @@
         var nativeFile = fileOrBlob;
         // If it's not a File object natively (e.g. from dataUrlToBlob), wrap it
         if (!(fileOrBlob instanceof File)) {
-          nativeFile = new File([fileOrBlob], fileName || 'inspection.png', { type: fileOrBlob.type || 'image/png' });
+          try {
+            nativeFile = new File([fileOrBlob], fileName || 'inspection.jpg', { type: fileOrBlob.type || 'image/jpeg' });
+          } catch (e) {
+            nativeFile = fileOrBlob;
+            nativeFile.name = fileName || 'inspection.jpg';
+          }
         }
 
         console.log('[uploadImageToZfs] Uploading via uploadFile — name:', nativeFile.name, 'type:', nativeFile.type, 'size:', nativeFile.size, 'isNativeOriginal:', Boolean(fileOrBlob && fileOrBlob === nativeFile));
@@ -10189,6 +10262,9 @@
 
 
       function createInspectionDocument(jsPDFCtor, docOptions) {
+        console.log('=== createInspectionDocument called ===');
+        console.log('docOptions:', docOptions);
+        
         docOptions = docOptions || {};
         var signDetails = docOptions.signDetails || {};
         var issueMarks = Array.isArray(docOptions.issueMarks) ? docOptions.issueMarks : [];
@@ -10218,6 +10294,16 @@
                 var margin = 40;
                 var now = new Date();
                 var recordData = crmState.recordData || {};
+
+                // ========== DEBUG LOGGING ==========
+                console.log('=== PDF GENERATION DEBUG ===');
+                console.log('Full crmState object:', crmState);
+                console.log('recordData object:', recordData);
+                console.log('recordData keys:', Object.keys(recordData));
+                console.log('signDetails object:', signDetails);
+                console.log('issueMarks count:', issueMarks.length);
+                console.log('=== END DEBUG ===');
+                // ===================================
 
                 function getFieldValue(value) {
                   if (value === null || value === undefined) return '';
@@ -10280,7 +10366,7 @@
                 yPos += 20;
                 doc.text('Driver:', margin, yPos);
                 doc.line(margin + 35, yPos + 2, margin + 120, yPos + 2);
-                doc.text(getFieldValue(recordData.Driver), margin + 38, yPos);
+                doc.text(getFieldValue(recordData.Consigned_By), margin + 38, yPos);
 
                 doc.text('Petrol Level:', margin + 140, yPos);
                 doc.line(margin + 205, yPos + 2, margin + 280, yPos + 2);
@@ -10297,7 +10383,7 @@
                 doc.rect(bxX + 120, yPos - 10, 12, 12);
                 doc.text('Al AIN', bxX + 136, yPos);
 
-                var branch = getFieldValue(recordData.Branch).toUpperCase();
+                var branch = getFieldValue(recordData.Branch || recordData.Location || '').toUpperCase();
 
                 function drawTick(tx, ty) {
                   doc.setLineWidth(1.5);
@@ -10316,7 +10402,7 @@
 
                 doc.text('Error/s:', margin + 140, yPos);
                 doc.line(margin + 205, yPos + 2, margin + 280, yPos + 2);
-                doc.text(getFieldValue(recordData.Errors), margin + 210, yPos);
+                doc.text('', margin + 210, yPos);
 
                 yPos += 15;
 
@@ -10332,7 +10418,9 @@
                 doc.setFont('helvetica', 'bold');
                 doc.text('Make and Model:', margin + 5, gridTop + 14);
                 doc.setFont('helvetica', 'normal');
-                doc.text(getFieldValue(recordData.Make) + ' ' + getFieldValue(recordData.Model), margin + 100, gridTop + 14);
+                var makeValue = typeof recordData.Make === 'object' ? getFieldValue(recordData.Make.name) : getFieldValue(recordData.Make);
+                var modelValue = typeof recordData.Model === 'object' ? getFieldValue(recordData.Model.name) : getFieldValue(recordData.Model);
+                doc.text(makeValue + ' ' + modelValue, margin + 100, gridTop + 14);
 
                 doc.rect(margin, gridTop, leftW, 170); // the entire left details bounding box properly spaced
 
@@ -10341,7 +10429,7 @@
                 doc.setFont('helvetica', 'normal');
 
                 // VIN Boxes
-                var vin = getFieldValue(recordData.VIN).toUpperCase();
+                var vin = getFieldValue(recordData.V_I_N || recordData.VIN || '').toUpperCase();
                 var vinBoxW = Math.floor((leftW - 55) / 17);
                 for (var i = 0; i < 17; i++) {
                   var vx = margin + 50 + (i * vinBoxW);
@@ -10370,7 +10458,7 @@
                 doc.text(doc.splitTextToSize(getFieldValue(recordData.Mileage), 40)[0] || '', margin + 68, yy + 15);
                 doc.line(margin + 110, gridTop + 45, margin + 110, lineY);
 
-                var spec = getFieldValue(recordData.Spec) || '';
+                var spec = getFieldValue(recordData.Specs || recordData.Spec || '');
                 var specUp = spec.toUpperCase();
                 doc.setFont('helvetica', 'bold');
                 doc.text('GCC', margin + 113, yy);
