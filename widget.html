@@ -2697,13 +2697,23 @@
             </button>
           </div>
           <div class="comment-card-actions" style="justify-content: flex-start; gap: 8px; display: flex; width: 100%;">
-            <input type="file" id="commentImageInput" accept="image/*" capture="environment" style="display: none;" />
-            <button class="comment-card-button" id="commentImageBtn" data-tooltip="Attach Image" type="button" style="min-width: unset; padding: 0 8px;">
+            <input type="file" id="commentImageInput" accept="image/jpeg, image/png, image/jpg, image/webp" style="display: none;" />
+            <input type="file" id="commentCameraInput" accept="image/jpeg, image/png, image/jpg, image/webp" capture="environment" style="display: none;" />
+            <button class="comment-card-button" id="commentImageBtn" data-tooltip="Attach File" type="button"
+              style="min-width: unset; padding: 0 8px;">
               <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"
                 stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                 <circle cx="8.5" cy="8.5" r="1.5"></circle>
                 <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+            </button>
+            <button class="comment-card-button" id="commentCameraBtn" data-tooltip="Take Photo" type="button"
+              style="min-width: unset; padding: 0 8px;">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
               </svg>
             </button>
             <div style="flex: 1;"></div>
@@ -2745,15 +2755,25 @@
             </div>
             <div class="inline-comment-actions"
               style="display: flex; gap: 6px; justify-content: flex-start; width: 100%;">
-              <input type="file" id="inlineCommentImageInput" accept="image/*" capture="environment"
+              <input type="file" id="inlineCommentImageInput" accept="image/jpeg, image/png, image/jpg, image/webp"
                 style="display: none;" />
-              <button class="inline-comment-button" id="inlineCommentImageBtn" data-tooltip="Attach Image" type="button"
+              <input type="file" id="inlineCommentCameraInput" accept="image/jpeg, image/png, image/jpg, image/webp" capture="environment"
+                style="display: none;" />
+              <button class="inline-comment-button" id="inlineCommentImageBtn" data-tooltip="Attach File" type="button"
                 style="padding: 2px 6px; min-width: unset;">
                 <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"
                   stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                   <circle cx="8.5" cy="8.5" r="1.5"></circle>
                   <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+              </button>
+              <button class="inline-comment-button" id="inlineCommentCameraBtn" data-tooltip="Take Photo" type="button"
+                style="padding: 2px 6px; min-width: unset;">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                  <circle cx="12" cy="13" r="4"></circle>
                 </svg>
               </button>
               <div style="flex: 1;"></div>
@@ -2822,10 +2842,12 @@
             <path d="M12 18v-6"></path>
           </svg>
         </div>
-        <button type="button" class="custom-modal-btn" id="closeSignDetailsModal" aria-label="Close signature details">Close</button>
+        <button type="button" class="custom-modal-btn" id="closeSignDetailsModal"
+          aria-label="Close signature details">Close</button>
       </div>
       <h2 class="sign-details-title">Send for Signature</h2>
-      <p class="sign-details-subtitle">Enter the handover and receiving details before sending the inspection report to Zoho Sign.</p>
+      <p class="sign-details-subtitle">Enter the handover and receiving details before sending the inspection report to
+        Zoho Sign.</p>
 
       <form id="signDetailsForm" novalidate>
         <div class="sign-details-grid">
@@ -2872,6 +2894,20 @@
     </div>
   </div>
 
+  <!-- WebRTC Desktop Camera Modal -->
+  <div id="webcamOverlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 99999; align-items: center; justify-content: center; flex-direction: column;">
+    <div style="position: relative; width: 100%; max-width: 640px; margin: 0 auto; background: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+      <h3 style="color: white; margin-top: 0; margin-bottom: 16px; text-align: center; font-family: Inter, sans-serif;">Desktop Camera Capture</h3>
+      <video id="webcamVideo" autoplay playsinline style="width: 100%; height: auto; background: #000; border-radius: 8px;"></video>
+      <div style="display: flex; gap: 16px; justify-content: center; padding-top: 20px;">
+        <button id="webcamCaptureBtn" style="padding: 12px 24px; background: #10b981; color: white; border: none; border-radius: 20px; font-weight: 600; cursor: pointer; text-transform: uppercase;">Take Photo</button>
+        <button id="webcamCancelBtn" style="padding: 12px 24px; background: #64748b; color: white; border: none; border-radius: 20px; font-weight: 600; cursor: pointer;">Cancel</button>
+      </div>
+      <p id="webcamErrorMsg" style="color: #ef4444; font-size: 14px; text-align: center; display: none; margin-top: 12px;"></p>
+    </div>
+    <canvas id="webcamCanvas" style="display: none;"></canvas>
+  </div>
+
   <script>
     (function () {
       var svgContainer = document.getElementById('svgContainer');
@@ -2892,12 +2928,16 @@
       var inlineCommentSaveButton = document.getElementById('inlineCommentSaveButton');
       var inlineCommentImageBtn = document.getElementById('inlineCommentImageBtn');
       var inlineCommentImageInput = document.getElementById('inlineCommentImageInput');
+      var inlineCommentCameraBtn = document.getElementById('inlineCommentCameraBtn');
+      var inlineCommentCameraInput = document.getElementById('inlineCommentCameraInput');
       var inlineCommentAttachmentPreview = document.getElementById('inlineCommentAttachmentPreview');
       var inlineCommentAttachmentName = document.getElementById('inlineCommentAttachmentName');
       var inlineCommentAttachmentRemove = document.getElementById('inlineCommentAttachmentRemove');
 
       var commentImageBtn = document.getElementById('commentImageBtn');
       var commentImageInput = document.getElementById('commentImageInput');
+      var commentCameraBtn = document.getElementById('commentCameraBtn');
+      var commentCameraInput = document.getElementById('commentCameraInput');
       var commentAttachmentPreview = document.getElementById('commentAttachmentPreview');
       var commentAttachmentName = document.getElementById('commentAttachmentName');
       var commentAttachmentRemove = document.getElementById('commentAttachmentRemove');
@@ -2918,17 +2958,21 @@
       var inlineCommentSaveButton = document.getElementById('inlineCommentSaveButton');
       var inlineCommentClearButton = document.getElementById('inlineCommentClearButton');
 
-      var defectTypes = [
-        { id: 'Rust', code: 'R', icon: 'x', className: 'annotated-rust', dash: '1 5', width: 2.7, color: '#d63b36', bg: '#fff1ef', ring: 'rgba(214, 59, 54, 0.14)' },
-        { id: 'Scratch', code: 'S', icon: '!', className: 'annotated-scratch', dash: '15 5', width: 2.6, color: '#2077c8', bg: '#edf6ff', ring: 'rgba(32, 119, 200, 0.16)' },
-        { id: 'Crack', code: 'C', icon: '!', className: 'annotated-crack', dash: '9 3 2 3', width: 2.5, color: '#f2b827', bg: '#fff7d8', ring: 'rgba(242, 184, 39, 0.2)' },
-        { id: 'Dent', code: 'D', icon: '?', className: 'annotated-dent', dash: '', width: 2.1, color: '#9346c7', bg: '#f7edff', ring: 'rgba(147, 70, 199, 0.18)' },
-        { id: 'Missing Part', code: 'M', icon: '', className: 'annotated-missing-part', dash: '', width: 2.4, color: '#31a05f', bg: '#eefaf1', ring: 'rgba(49, 160, 95, 0.18)' },
-        { id: 'Water Dent', code: 'W', icon: '!', className: 'annotated-water-dent', dash: '8 4', width: 1.9, color: '#22a6b8', bg: '#eafafd', ring: 'rgba(34, 166, 184, 0.16)' },
-        { id: 'Oxidation', code: 'O', icon: 'o', className: 'annotated-oxidation', dash: '1 4', width: 2.1, color: '#7b8794', bg: '#f1f3f5', ring: 'rgba(123, 135, 148, 0.16)' },
-        { id: 'Paint Peel', code: 'P', icon: '~', className: 'annotated-paint-peel', dash: '14 3 3 3 3 3', width: 2.1, color: '#e07a2d', bg: '#fff1e4', ring: 'rgba(224, 122, 45, 0.18)' },
-        { id: 'Other', code: 'X', icon: '...', className: 'annotated-other', dash: '6 3 1 3', width: 2, color: '#64748b', bg: '#f1f5f9', ring: 'rgba(100, 116, 139, 0.16)' }
+      /* Built-in defect types are intentionally disabled. Legends must come from Defect_Legends.
+      var DEFAULT_DEFECT_TYPES = [
+        { id: 'Rust', name: 'Rust', code: 'R', shortLabel: 'R', markerShape: 'ring', className: 'annotated-rust', dash: '1 5', width: 2.7, color: '#d63b36', textColor: '#ffffff', bg: '#fff1ef', ring: 'rgba(214, 59, 54, 0.14)' },
+        { id: 'Scratch', name: 'Scratch', code: 'S', shortLabel: 'S', markerShape: 'slash', className: 'annotated-scratch', dash: '15 5', width: 2.6, color: '#2077c8', textColor: '#ffffff', bg: '#edf6ff', ring: 'rgba(32, 119, 200, 0.16)' },
+        { id: 'Crack', name: 'Crack', code: 'C', shortLabel: 'C', markerShape: 'zigzag', className: 'annotated-crack', dash: '9 3 2 3', width: 2.5, color: '#f2b827', textColor: '#111827', bg: '#fff7d8', ring: 'rgba(242, 184, 39, 0.2)' },
+        { id: 'Dent', name: 'Dent', code: 'D', shortLabel: 'D', markerShape: 'circle', className: 'annotated-dent', dash: '', width: 2.1, color: '#9346c7', textColor: '#ffffff', bg: '#f7edff', ring: 'rgba(147, 70, 199, 0.18)' },
+        { id: 'Missing Part', name: 'Missing Part', code: 'M', shortLabel: 'M', markerShape: 'ring', className: 'annotated-missing-part', dash: '', width: 2.4, color: '#31a05f', textColor: '#ffffff', bg: '#eefaf1', ring: 'rgba(49, 160, 95, 0.18)' },
+        { id: 'Water Dent', name: 'Water Dent', code: 'W', shortLabel: 'W', markerShape: 'diamond', className: 'annotated-water-dent', dash: '8 4', width: 1.9, color: '#22a6b8', textColor: '#ffffff', bg: '#eafafd', ring: 'rgba(34, 166, 184, 0.16)' },
+        { id: 'Oxidation', name: 'Oxidation', code: 'O', shortLabel: 'O', markerShape: 'rectangle', className: 'annotated-oxidation', dash: '1 4', width: 2.1, color: '#7b8794', textColor: '#ffffff', bg: '#f1f3f5', ring: 'rgba(123, 135, 148, 0.16)' },
+        { id: 'Paint Peel', name: 'Paint Peel', code: 'P', shortLabel: 'P', markerShape: 'peel', className: 'annotated-paint-peel', dash: '14 3 3 3 3 3', width: 2.1, color: '#e07a2d', textColor: '#ffffff', bg: '#fff1e4', ring: 'rgba(224, 122, 45, 0.18)' },
+        { id: 'Other', name: 'Other', code: 'X', shortLabel: 'X', markerShape: 'rectangle', className: 'annotated-other', dash: '6 3 1 3', width: 2, color: '#64748b', textColor: '#ffffff', bg: '#f1f5f9', ring: 'rgba(100, 116, 139, 0.16)' }
       ];
+      */
+      var defectTypes = [];
+      var allDefectTypes = [];
 
       var annotations = {};
       var currentPartId = null;
@@ -2978,6 +3022,26 @@
       var CRM_SUBFORM_PART_FIELD = 'Part';
       var CRM_SUBFORM_COMMENTS_FIELD = 'Comments';
       var CRM_SUBFORM_ANNOTATION_DATA_FIELD = 'Annotation_Data_props';
+      var CRM_DEFECT_LEGENDS_MODULE = 'Defect_Legends';
+      var CRM_DEFECT_LEGEND_FIELDS = {
+        name: 'Name',
+        code: 'Legend_Code',
+        active: 'Is_Active',
+        shortLabel: 'Short_Label',
+        textColor: 'Text_Color',
+        displayOrder: 'Display_Order',
+        color: 'Colour_Hex'
+      };
+      // Annotation geometry comes from the predefined automotive design catalog
+      // selected using Name/Legend_Code; CRM does not configure marker shapes.
+      var DEFECT_DESIGN_SHAPES = {
+        GLASS_DAMAGE: 'zigzag', WATER_DENT: 'diamond', PAINT_PEEL: 'peel',
+        MISSING_PART: 'ring', BROKEN_PART: 'zigzag', SCRATCH: 'slash',
+        CHIP: 'circle', DENT: 'circle', OXIDATION: 'rectangle', RUST: 'ring',
+        CRACK: 'zigzag', LEAK: 'diamond', TYRE_WEAR: 'slash', LOOSE_PART: 'ring',
+        ELECTRICAL: 'cross', MISALIGNMENT: 'rectangle', HOLE: 'ring', TEAR: 'zigzag',
+        STAIN: 'circle', BURN: 'circle', OTHER: 'rectangle'
+      };
       var CRM_SDK_URL = 'https://live.zwidgets.com/js-sdk/1.2/ZohoEmbededAppSDK.min.js';
       var crmState = {
         isReady: false,
@@ -3429,6 +3493,17 @@
         var serializedMark = JSON.parse(JSON.stringify(mark || {}));
         markCurrentSvgOrientation(serializedMark);
         serializedMark.comment = normalizeCommentText(serializedMark.comment);
+        if (serializedMark.category) {
+          var defectSnapshot = getDefectConfig(serializedMark.category);
+          serializedMark.category = defectSnapshot.id;
+          serializedMark.defectSnapshot = {
+            code: defectSnapshot.id,
+            name: defectSnapshot.name || defectSnapshot.id,
+            shortLabel: defectSnapshot.shortLabel || defectSnapshot.code || '',
+            color: defectSnapshot.color || '#64748b',
+            textColor: defectSnapshot.textColor || '#ffffff'
+          };
+        }
 
         delete serializedMark.attachmentImageData;
         delete serializedMark.attachmentImageEncryptedId;
@@ -3493,6 +3568,10 @@
           }
           if (parsedValue && parsedValue.svgOrientation && !mark.svgOrientation) {
             mark.svgOrientation = parsedValue.svgOrientation;
+          }
+          if (mark.category) {
+            var resolvedDefect = getDefectConfig(mark.category, mark.defectSnapshot);
+            mark.category = resolvedDefect.id;
           }
           migrateLegacyMarkToCurrentSvg(mark);
 
@@ -3832,14 +3911,14 @@
           // 2. The existing row has an image already (check both attachmentImages AND if row exists in CRM)
           // 3. The new encrypted ID is different from the existing one
           // 4. This is a pre-existing row that has been saved to CRM
-          
+
           // Check if the mark has an existing image attached
           var hasExistingImage = (mark.attachmentImages && mark.attachmentImages.length > 0) || Boolean(mark._deletedImageId);
-          var existingEncryptedId = hasExistingImage 
-            ? ((mark.attachmentImages && mark.attachmentImages.length > 0) ? mark.attachmentImages[0].encryptedId : mark._deletedImageId) 
+          var existingEncryptedId = hasExistingImage
+            ? ((mark.attachmentImages && mark.attachmentImages.length > 0) ? mark.attachmentImages[0].encryptedId : mark._deletedImageId)
             : null;
           var newEncryptedId = mark.attachmentImageEncryptedId;
-          
+
           console.log('[DEBUG IMAGE CHECK]', {
             rowId: rowId,
             newEncryptedId: newEncryptedId,
@@ -3848,16 +3927,16 @@
             'mark.attachmentImages': mark.attachmentImages,
             'mark.attachmentImageEncryptedId': mark.attachmentImageEncryptedId
           });
-          
+
           // Image needs replacement when:
           // 1. We have a new encrypted ID (new image uploaded)
           // 2. The mark has an existing image in CRM (attachmentImages array is populated)
           // 3. The new ID differs from the existing one
           // 4. The row exists in CRM (has a rowId)
-          var imageNeedsReplace = Boolean(newEncryptedId) && 
-                                  hasExistingImage && 
-                                  newEncryptedId !== existingEncryptedId &&
-                                  rowId;
+          var imageNeedsReplace = Boolean(newEncryptedId) &&
+            hasExistingImage &&
+            newEncryptedId !== existingEncryptedId &&
+            rowId;
 
           // Check if there's a NEW image to upload (adding image to a mark that had no image).
           // A new image exists when:
@@ -3880,7 +3959,7 @@
 
             // If replacing, append the replacement image payload securely onto the row
             if (imageNeedsReplace && mark.attachmentImageEncryptedId) {
-              row['Upload_Image'] = [{ Encrypted_Id: mark.attachmentImageEncryptedId }];
+              row['Upload_Image'] = [{ file_id: mark.attachmentImageEncryptedId }];
             } else {
               // Deleting without replacement — no image on the row
               row['Upload_Image'] = null;
@@ -3893,7 +3972,8 @@
             mark._imageNeedsCrmReplace = false;
           } else if (hasNewImage && mark.attachmentImageEncryptedId) {
             // Provide the uploaded file's encrypted ID securely wrapped
-            row['Upload_Image'] = [{ Encrypted_Id: mark.attachmentImageEncryptedId }];
+            row['Upload_Image'] = [{ file_id: mark.attachmentImageEncryptedId }];
+            console.log('[DEBUG-DIFF] Added Upload_Image payload for NEW image on mark', mark.id, ':', JSON.stringify(row['Upload_Image']));
           }
 
           // Neutralize legacy localStorage phantom flags
@@ -4146,6 +4226,156 @@
         }, 150);
       }
 
+      function isCrmCheckboxEnabled(value) {
+        if (value === true || value === 1) {
+          return true;
+        }
+        if (value === false || value === 0 || value === null || typeof value === 'undefined') {
+          return false;
+        }
+        var normalized = String(value).trim().toLowerCase();
+        return normalized === 'true' || normalized === '1' || normalized === 'yes';
+      }
+
+      function isSelectableDefectLegend(defect) {
+        return Boolean(defect) && defect.isActive === true;
+      }
+
+      function slugifyDefectClass(value) {
+        return 'annotated-' + String(value || 'other').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      }
+
+      function getPredefinedShapeForDesign(designKey) {
+        return DEFECT_DESIGN_SHAPES[designKey] || DEFECT_DESIGN_SHAPES.OTHER;
+      }
+
+      function resolveDefectDesignKey(name, code) {
+        var searchableName = String(name || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ');
+        var searchableCode = String(code || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ');
+        var searchable = (' ' + searchableName + ' ' + searchableCode + ' ').replace(/\s+/g, ' ');
+
+        // Compound/specific terms precede broad terms to make matching deterministic.
+        if (/\bglass\b|\bwindshield\b|\bwindscreen\b/.test(searchable)) return 'GLASS_DAMAGE';
+        if (/\bwater\b|\bmoisture\b|\bwaterlogged\b|\bflood\b/.test(searchable)) return 'WATER_DENT';
+        if (/\bpaint\s*(peel|peeling|flak|chip)|\bclear\s*coat/.test(searchable)) return 'PAINT_PEEL';
+        if (/\bmissing\b|\bpart\s*missing\b|\bdetached\b|\bnot\s*present\b/.test(searchable)) return 'MISSING_PART';
+        if (/\bbroken\b|\bbreakage\b|\bshattered\b|\bsmashed\b/.test(searchable)) return 'BROKEN_PART';
+        if (/\btyre\b|\btire\b|\btread\b|\bbald\b/.test(searchable)) return 'TYRE_WEAR';
+        if (/\boil\s*leak|\bfluid\s*leak|\bleak|\bseepage\b|\bdrip/.test(searchable)) return 'LEAK';
+        if (/\belectric|\bwiring\b|\bwire\b|\bbattery\b|\blight\s*fault|\bshort\s*circuit/.test(searchable)) return 'ELECTRICAL';
+        if (/\bmisalign|\bmisfit|\buneven\s*gap|\boff\s*center/.test(searchable)) return 'MISALIGNMENT';
+        if (/\bloose\b|\bwobbl|\bunsecure|\bfastener/.test(searchable)) return 'LOOSE_PART';
+        if (/\bscratch|\bscrape|\bscuff|\babrasion/.test(searchable)) return 'SCRATCH';
+        if (/\bchip|\bchipped\b|\bnick\b/.test(searchable)) return 'CHIP';
+        if (/\bdent|\bding\b|\bdepress/.test(searchable)) return 'DENT';
+        if (/\boxid|\bfaded\s*metal/.test(searchable)) return 'OXIDATION';
+        if (/\brust|\bcorrosion\b|\bcorroded\b/.test(searchable)) return 'RUST';
+        if (/\bcrack|\bfracture|\bsplit\b/.test(searchable)) return 'CRACK';
+        if (/\bhole\b|\bpuncture|\bperforat/.test(searchable)) return 'HOLE';
+        if (/\btear\b|\btorn\b|\brip\b|\bcut\b/.test(searchable)) return 'TEAR';
+        if (/\bburn\b|\bscorch|\bheat\s*damage|\bmelt/.test(searchable)) return 'BURN';
+        if (/\bstain\b|\bspot\b|\bmark\b|\bdiscolor|\bdiscolour/.test(searchable)) return 'STAIN';
+        return 'OTHER';
+      }
+
+      function normalizeDefectLegendRecord(record) {
+        var fields = CRM_DEFECT_LEGEND_FIELDS;
+        var name = String(record && record[fields.name] || '').trim();
+        var legendCode = String(record && record[fields.code] || '').trim().toUpperCase();
+        var shortLabel = String(record && record[fields.shortLabel] || legendCode || '?').trim().slice(0, 3);
+        var color = normalizeColor(record && record[fields.color]) || '#64748b';
+        var textColor = normalizeColor(record && record[fields.textColor]) || '#ffffff';
+        var order = Number(record && record[fields.displayOrder]);
+        if (!name || !legendCode) {
+          return null;
+        }
+        return {
+          crmId: record.id ? String(record.id) : '',
+          id: legendCode,
+          name: name,
+          code: shortLabel || legendCode.slice(0, 3),
+          shortLabel: shortLabel || legendCode.slice(0, 3),
+          designKey: resolveDefectDesignKey(name, legendCode),
+          markerShape: getPredefinedShapeForDesign(resolveDefectDesignKey(name, legendCode)),
+          className: slugifyDefectClass(legendCode),
+          dash: '',
+          width: 2.2,
+          color: color,
+          textColor: textColor,
+          bg: colorToRgba(color, 0.1),
+          ring: colorToRgba(color, 0.18),
+          displayOrder: Number.isFinite(order) ? order : 9999,
+          isActive: isCrmCheckboxEnabled(record[fields.active]),
+          source: 'crm'
+        };
+      }
+
+      function applyDefectLegendConfiguration(configuredLegends) {
+        var normalized = (configuredLegends || []).filter(Boolean).sort(function (first, second) {
+          return first.displayOrder - second.displayOrder || first.name.localeCompare(second.name);
+        });
+        if (!normalized.length) {
+          return false;
+        }
+        var activeLegends = normalized.filter(isSelectableDefectLegend);
+        if (!activeLegends.length) {
+          return false;
+        }
+        allDefectTypes = normalized;
+        defectTypes = activeLegends;
+        if (!defectTypes.some(function (defect) { return defect.id === activeDefectId; })) {
+          activeDefectId = null;
+        }
+        renderLegend();
+        updateBadges();
+        if (svgRoot) {
+          refreshPartStyles();
+          renderOverlayMarks();
+        }
+        return true;
+      }
+
+      function fetchAllDefectLegendRecords(zoho, page, records) {
+        var currentPage = page || 1;
+        var collected = records || [];
+        return zoho.CRM.API.getAllRecords({
+          Entity: CRM_DEFECT_LEGENDS_MODULE,
+          sort_order: 'asc',
+          per_page: 200,
+          page: currentPage
+        }).then(function (response) {
+          var pageRecords = response && Array.isArray(response.data) ? response.data : [];
+          var combined = collected.concat(pageRecords);
+          if (pageRecords.length === 200) {
+            return fetchAllDefectLegendRecords(zoho, currentPage + 1, combined);
+          }
+          return combined;
+        });
+      }
+
+      function loadDefectLegends() {
+        var zoho = getZohoSdk();
+        if (!zoho || typeof zoho.CRM.API.getAllRecords !== 'function') {
+          return Promise.resolve(false);
+        }
+        return fetchAllDefectLegendRecords(zoho, 1, []).then(function (records) {
+          var normalized = records.map(normalizeDefectLegendRecord).filter(Boolean);
+          if (!applyDefectLegendConfiguration(normalized)) {
+            throw new Error('Defect_Legends has no valid active records.');
+          }
+          return true;
+        }).catch(function (error) {
+          crmState.lastError = error && error.message ? error.message : String(error || 'Legend load failed');
+          defectTypes = [];
+          allDefectTypes = [];
+          activeDefectId = null;
+          renderLegend();
+          updateBadges();
+          updateStatus('Unable to load active defect legends from Defect_Legends.', true);
+          return false;
+        });
+      }
+
       function initializeCrmIntegration() {
         if (!window.ZOHO || !window.ZOHO.embeddedApp) {
           return;
@@ -4156,11 +4386,13 @@
           crmState.moduleName = data && data.Entity ? data.Entity : CRM_MODULE_API_NAME;
           crmState.recordId = extractCrmRecordId(data);
           crmState.isReady = Boolean(crmState.recordId);
-          if (!crmState.recordId) {
-            updateStatus('Open this widget from an Inspections record to save CRM data.', true);
-            return;
-          }
-          loadInspectionRecord(false);
+          loadDefectLegends().then(function () {
+            if (!crmState.recordId) {
+              updateStatus('Open this widget from an Inspections record to save CRM data.', true);
+              return;
+            }
+            loadInspectionRecord(false);
+          });
         });
 
         var initResult = window.ZOHO.embeddedApp.init();
@@ -4206,38 +4438,55 @@
         });
       }
 
-      function getDefectConfig(defectId) {
-        return defectTypes.find(function (defect) {
-          return defect.id === defectId;
-        }) || defectTypes[defectTypes.length - 1];
+      function getFallbackDefectConfig(defectId) {
+        var fallbackId = String(defectId || 'Unknown');
+        return {
+          id: fallbackId,
+          name: fallbackId,
+          code: fallbackId.slice(0, 3),
+          shortLabel: fallbackId.slice(0, 3),
+          markerShape: 'circle',
+          className: slugifyDefectClass(fallbackId),
+          dash: '',
+          width: 2.2,
+          color: '#64748b',
+          textColor: '#ffffff',
+          bg: 'rgba(100, 116, 139, 0.1)',
+          ring: 'rgba(100, 116, 139, 0.18)',
+          source: 'unknown'
+        };
+      }
+
+      function getDefectConfig(defectId, snapshot) {
+        var configured = allDefectTypes.find(function (defect) {
+          return defect.id === defectId || defect.code === defectId || defect.name === defectId;
+        });
+        if (configured) {
+          return configured;
+        }
+        if (snapshot && snapshot.code) {
+          var snapshotColor = normalizeColor(snapshot.color) || '#64748b';
+          return {
+            id: String(snapshot.code),
+            name: String(snapshot.name || snapshot.code),
+            code: String(snapshot.shortLabel || snapshot.code).slice(0, 3),
+            shortLabel: String(snapshot.shortLabel || snapshot.code).slice(0, 3),
+            designKey: resolveDefectDesignKey(snapshot.name, snapshot.code),
+            markerShape: getPredefinedShapeForDesign(resolveDefectDesignKey(snapshot.name, snapshot.code)),
+            color: snapshotColor,
+            textColor: normalizeColor(snapshot.textColor) || '#ffffff',
+            bg: colorToRgba(snapshotColor, 0.1),
+            ring: colorToRgba(snapshotColor, 0.18),
+            width: 2.2,
+            dash: '',
+            source: 'snapshot'
+          };
+        }
+        return getFallbackDefectConfig(defectId);
       }
 
       function getShapeTypeForDefect(defectId) {
-        if (defectId === 'Dent') {
-          return 'circle';
-        }
-        if (defectId === 'Missing Part') {
-          return 'ring';
-        }
-        if (defectId === 'Water Dent') {
-          return 'diamond';
-        }
-        if (defectId === 'Oxidation') {
-          return 'rectangle';
-        }
-        if (defectId === 'Scratch') {
-          return 'slash';
-        }
-        if (defectId === 'Crack') {
-          return 'zigzag';
-        }
-        if (defectId === 'Paint Peel') {
-          return 'peel';
-        }
-        if (defectId === 'Rust') {
-          return 'ring';
-        }
-        return 'rectangle';
+        return getDefectConfig(defectId).markerShape || 'rectangle';
       }
 
       function normalizeColor(value) {
@@ -4281,10 +4530,13 @@
       }
 
       function getMarkColor(mark) {
-        if (mark && mark.category) {
-          return getDefectConfig(mark.category).color || '#64748b';
-        }
         var markColor = mark && normalizeColor(mark.color);
+        if (markColor) {
+          return markColor;
+        }
+        if (mark && mark.category) {
+          return getDefectConfig(mark.category, mark.defectSnapshot).color || '#64748b';
+        }
         if (markColor) {
           return markColor;
         }
@@ -4317,6 +4569,16 @@
         return group;
       }
 
+      function getDefectKey(defectId, snapshot) {
+        var defectConfig = getDefectConfig(defectId, snapshot);
+        return String(defectConfig.id || defectId || '').trim().toUpperCase().replace(/[^A-Z0-9]+/g, '_');
+      }
+
+      function getDefectDesignKey(defectId, snapshot) {
+        var defectConfig = getDefectConfig(defectId, snapshot);
+        return defectConfig.designKey || resolveDefectDesignKey(defectConfig.name, defectConfig.id || defectId);
+      }
+
       function applyDefectStrokeStyle(node, defectId, shapeType, mark) {
         var markColor = getMarkColor(mark);
         if (!defectId) {
@@ -4329,7 +4591,8 @@
           return;
         }
 
-        var defectConfig = getDefectConfig(defectId);
+        var defectConfig = getDefectConfig(defectId, mark && mark.defectSnapshot);
+        var defectKey = getDefectDesignKey(defectId, mark && mark.defectSnapshot);
         node.setAttribute('fill', 'none');
         node.setAttribute('stroke', markColor);
         node.setAttribute('stroke-width', String(defectConfig.width || 3));
@@ -4341,7 +4604,7 @@
           node.setAttribute('stroke-dasharray', defectConfig.dash);
         }
 
-        if (defectId === 'Rust' || defectId === 'Scratch' || defectId === 'Crack') {
+        if (defectConfig.markerShape === 'circle' || defectConfig.markerShape === 'cross' || defectKey === 'RUST' || defectKey === 'SCRATCH' || defectKey === 'CRACK') {
           node.setAttribute('stroke-linecap', 'round');
         }
       }
@@ -4356,16 +4619,17 @@
           return colorToRgba(markColor, 0.1);
         }
 
-        if (mark.category === 'Dent') {
+        var defectKey = getDefectDesignKey(mark.category, mark.defectSnapshot);
+        if (defectKey === 'DENT') {
           return colorToRgba(markColor, 0.22);
         }
-        if (mark.category === 'Water Dent') {
+        if (defectKey === 'WATER_DENT') {
           return colorToRgba(markColor, 0.18);
         }
-        if (mark.category === 'Oxidation' || mark.category === 'Rust') {
+        if (defectKey === 'OXIDATION' || defectKey === 'RUST') {
           return colorToRgba(markColor, 0.18);
         }
-        if (mark.category === 'Paint Peel') {
+        if (defectKey === 'PAINT_PEEL') {
           return colorToRgba(markColor, 0.19);
         }
         return colorToRgba(markColor, 0.17);
@@ -4378,6 +4642,7 @@
           mark.shapeType === 'ring' ||
           mark.shapeType === 'polygon' ||
           mark.shapeType === 'triangle' ||
+          mark.shapeType === 'cross' ||
           mark.shapeType === 'diamond' ||
           mark.shapeType === 'peel' ||
           (mark.shapeType === 'draw' && mark.isClosed);
@@ -5839,7 +6104,7 @@
         }, 0);
 
         partBadge.textContent = 'Part: ' + (currentPartId ? formatPartName(currentPartId) : 'None');
-        defectBadge.textContent = 'Defect: ' + (activeDefectId || 'None');
+        defectBadge.textContent = 'Defect: ' + (activeDefectId ? getDefectConfig(activeDefectId).name : 'None');
         countBadge.textContent = 'Parts ' + annotatedParts + ' | Marks ' + totalMarks;
         renderIssueLog();
         updateActionButtonStates();
@@ -5879,7 +6144,7 @@
           node.setAttribute('stroke-width', mark.shapeType === 'ring' ? '2.1' : '1.5');
           applyDefectStrokeStyle(node, mark.category, mark.shapeType, mark);
           applyMarkFillStyle(node, mark, true);
-        } else if (mark.shapeType === 'diamond' || mark.shapeType === 'zigzag' || mark.shapeType === 'peel' || mark.shapeType === 'slash' || mark.shapeType === 'polygon' || mark.shapeType === 'triangle' || mark.shapeType === 'line') {
+        } else if (mark.shapeType === 'diamond' || mark.shapeType === 'zigzag' || mark.shapeType === 'peel' || mark.shapeType === 'slash' || mark.shapeType === 'polygon' || mark.shapeType === 'triangle' || mark.shapeType === 'cross' || mark.shapeType === 'line') {
           node = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
           node.setAttribute('points', mark.points);
           node.setAttribute('stroke-linecap', 'round');
@@ -5924,7 +6189,7 @@
           previewNode = createPreviewNode(previewMark);
         } else if (drawingSession.current) {
           previewMark = buildShapeMarkFromSession(drawingSession, true);
-          previewMark.type = drawingSession.shapeType === 'legend-region' ? 'legend' : 'shape';
+          previewMark.type = drawingSession.category ? 'legend' : 'shape';
           previewNode = createPreviewNode(previewMark);
         }
 
@@ -5984,6 +6249,32 @@
               (startX + width).toFixed(2) + ',' + (startY + height).toFixed(2),
               startX.toFixed(2) + ',' + (startY + height).toFixed(2),
               cx.toFixed(2) + ',' + startY.toFixed(2)
+            ].join(' '),
+            color: session.color
+          };
+        }
+
+        if (session.shapeType === 'cross') {
+          var armX = width * 0.34;
+          var armY = height * 0.34;
+          return {
+            shapeType: 'cross',
+            partId: session.partId,
+            category: session.category,
+            points: [
+              (cx - armX / 2) + ',' + startY,
+              (cx + armX / 2) + ',' + startY,
+              (cx + armX / 2) + ',' + (cy - armY / 2),
+              (startX + width) + ',' + (cy - armY / 2),
+              (startX + width) + ',' + (cy + armY / 2),
+              (cx + armX / 2) + ',' + (cy + armY / 2),
+              (cx + armX / 2) + ',' + (startY + height),
+              (cx - armX / 2) + ',' + (startY + height),
+              (cx - armX / 2) + ',' + (cy + armY / 2),
+              startX + ',' + (cy + armY / 2),
+              startX + ',' + (cy - armY / 2),
+              (cx - armX / 2) + ',' + (cy - armY / 2),
+              (cx - armX / 2) + ',' + startY
             ].join(' '),
             color: session.color
           };
@@ -6136,7 +6427,7 @@
           var canCommitShape = session.shapeType === 'line' ? distance > 2 : width > 2 && height > 2;
           if (canCommitShape) {
             var shapeMark = buildShapeMarkFromSession(session, false);
-            shapeMark.type = session.shapeType === 'legend-region' ? 'legend' : 'shape';
+            shapeMark.type = session.category ? 'legend' : 'shape';
             shapeMark.partId = session.partId;
             shapeMark.category = session.category;
             shapeMark.color = session.color;
@@ -6728,6 +7019,9 @@
           return;
         }
 
+        var defectConfig = getDefectConfig(mark.category, mark.defectSnapshot);
+        var defectKey = getDefectDesignKey(mark.category, mark.defectSnapshot);
+
         var resolvedLayer = targetLayer || overlayMarksLayer;
         if (!resolvedLayer) {
           return;
@@ -6750,12 +7044,12 @@
           'data-category': mark.category || ''
         });
 
-        if (mark.category === 'Dent') {
+        if (defectKey === 'DENT') {
           appendAccentNode(accentGroup, 'ellipse', { cx: center.x, cy: center.y, rx: size * 0.42, ry: size * 0.3, fill: 'rgba(255, 253, 248, 0.34)', stroke: ink, 'stroke-width': '1.45', opacity: '0.78' });
           appendAccentNode(accentGroup, 'ellipse', { cx: center.x, cy: center.y, rx: size * 0.29, ry: size * 0.2, fill: 'none', stroke: ink, 'stroke-width': '1.85', opacity: '0.94' });
           appendAccentNode(accentGroup, 'ellipse', { cx: center.x, cy: center.y, rx: size * 0.14, ry: size * 0.09, fill: ink, stroke: 'none', opacity: '0.42' });
           appendAccentNode(accentGroup, 'path', { d: 'M' + (center.x - size * 0.28) + ' ' + (center.y - size * 0.16) + ' C' + (center.x - size * 0.08) + ' ' + (center.y - size * 0.28) + ', ' + (center.x + size * 0.16) + ' ' + (center.y - size * 0.26) + ', ' + (center.x + size * 0.3) + ' ' + (center.y - size * 0.08), fill: 'none', stroke: 'rgba(255, 253, 248, 0.76)', 'stroke-width': '1.1', 'stroke-linecap': 'round' });
-        } else if (mark.category === 'Water Dent') {
+        } else if (defectKey === 'WATER_DENT') {
           appendAccentNode(accentGroup, 'ellipse', { cx: center.x, cy: center.y, rx: width * 0.38, ry: height * 0.24, fill: 'rgba(255, 253, 248, 0.28)', stroke: ink, 'stroke-width': '1.1', 'stroke-dasharray': '5 3', opacity: '0.58' });
           appendAccentNode(accentGroup, 'ellipse', { cx: center.x, cy: center.y, rx: width * 0.24, ry: height * 0.14, fill: 'none', stroke: ink, 'stroke-width': '1.4', opacity: '0.72' });
           [[0.34, 0.55], [0.5, 0.72], [0.66, 0.52]].forEach(function (drop, index) {
@@ -6763,34 +7057,84 @@
             var dropY = stamp.minY + (height * drop[1]);
             appendAccentNode(accentGroup, 'path', { d: 'M' + dropX + ' ' + (dropY - size * 0.12) + ' C' + (dropX + size * 0.09) + ' ' + (dropY - size * 0.02) + ', ' + (dropX + size * 0.1) + ' ' + (dropY + size * 0.09) + ', ' + dropX + ' ' + (dropY + size * 0.13) + ' C' + (dropX - size * 0.1) + ' ' + (dropY + size * 0.09) + ', ' + (dropX - size * 0.09) + ' ' + (dropY - size * 0.02) + ', ' + dropX + ' ' + (dropY - size * 0.12) + ' Z', fill: 'rgba(255, 253, 248, 0.42)', stroke: ink, 'stroke-width': index === 1 ? '1.2' : '0.9', opacity: index === 1 ? '0.78' : '0.56' });
           });
-        } else if (mark.category === 'Oxidation') {
+        } else if (defectKey === 'OXIDATION') {
           appendAccentNode(accentGroup, 'ellipse', { cx: center.x, cy: center.y, rx: width * 0.34, ry: height * 0.34, fill: 'none', stroke: ink, 'stroke-width': '1', 'stroke-dasharray': '1 3', opacity: '0.5' });
           [[0.22, 0.3, 0.055], [0.4, 0.48, 0.04], [0.6, 0.27, 0.048], [0.72, 0.6, 0.062], [0.32, 0.7, 0.05], [0.55, 0.76, 0.035]].forEach(function (pit) {
             appendAccentNode(accentGroup, 'circle', { cx: stamp.minX + width * pit[0], cy: stamp.minY + height * pit[1], r: Math.max(1.1, size * pit[2]), fill: ink, opacity: '0.5' });
           });
-        } else if (mark.category === 'Scratch') {
+        } else if (defectKey === 'SCRATCH') {
           appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.08, 0.78], [0.25, 0.62], [0.46, 0.5], [0.7, 0.32], [0.92, 0.18]]), fill: 'none', stroke: 'rgba(255, 253, 248, 0.9)', 'stroke-width': '4.4', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.62' });
           appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.08, 0.78], [0.25, 0.62], [0.46, 0.5], [0.7, 0.32], [0.92, 0.18]]), fill: 'none', stroke: ink, 'stroke-width': '1.65', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.92' });
           [[0.12, 0.58, 0.46, 0.3], [0.28, 0.82, 0.72, 0.48], [0.34, 0.7, 0.86, 0.36], [0.18, 0.42, 0.42, 0.22]].forEach(function (line, index) {
             appendAccentNode(accentGroup, 'line', { x1: stamp.minX + width * line[0], y1: stamp.minY + height * line[1], x2: stamp.minX + width * line[2], y2: stamp.minY + height * line[3], stroke: ink, 'stroke-width': index === 2 ? '1.15' : '0.9', 'stroke-linecap': 'round', opacity: index === 3 ? '0.42' : '0.64' });
           });
-        } else if (mark.category === 'Crack') {
+        } else if (defectKey === 'CRACK') {
           var crackPath = makePathFromRatios(stamp, [[0.14, 0.14], [0.36, 0.34], [0.29, 0.52], [0.54, 0.68], [0.48, 0.9], [0.72, 0.98]]);
           appendAccentNode(accentGroup, 'path', { d: crackPath, fill: 'none', stroke: 'rgba(255, 253, 248, 0.94)', 'stroke-width': '5.2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.72' });
           appendAccentNode(accentGroup, 'path', { d: crackPath, fill: 'none', stroke: ink, 'stroke-width': '2.2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.95' });
           appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.36, 0.34], [0.68, 0.18], [0.86, 0.26]]), fill: 'none', stroke: ink, 'stroke-width': '1.25', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.74' });
           appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.29, 0.52], [0.12, 0.68], [0.18, 0.82]]), fill: 'none', stroke: ink, 'stroke-width': '1.05', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.62' });
           appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.54, 0.68], [0.8, 0.72], [0.9, 0.58]]), fill: 'none', stroke: ink, 'stroke-width': '0.95', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.52' });
-        } else if (mark.category === 'Paint Peel') {
+        } else if (defectKey === 'PAINT_PEEL') {
           appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.14, 0.58], [0.22, 0.32], [0.46, 0.18], [0.74, 0.24], [0.88, 0.48], [0.72, 0.72], [0.42, 0.84], [0.2, 0.76], [0.14, 0.58]]) + ' Z', fill: 'rgba(255, 253, 248, 0.46)', stroke: ink, 'stroke-width': '1.2', opacity: '0.78' });
           appendAccentNode(accentGroup, 'path', { d: 'M' + (stamp.minX + width * 0.48) + ' ' + (stamp.minY + height * 0.18) + ' C' + (stamp.minX + width * 0.62) + ' ' + (stamp.minY + height * 0.32) + ', ' + (stamp.minX + width * 0.72) + ' ' + (stamp.minY + height * 0.48) + ', ' + (stamp.minX + width * 0.72) + ' ' + (stamp.minY + height * 0.72) + ' C' + (stamp.minX + width * 0.58) + ' ' + (stamp.minY + height * 0.62) + ', ' + (stamp.minX + width * 0.48) + ' ' + (stamp.minY + height * 0.5) + ', ' + (stamp.minX + width * 0.48) + ' ' + (stamp.minY + height * 0.18) + ' Z', fill: 'rgba(47, 41, 37, 0.13)', stroke: ink, 'stroke-width': '1.05', opacity: '0.82' });
           appendAccentNode(accentGroup, 'path', { d: 'M' + (stamp.minX + width * 0.28) + ' ' + (stamp.minY + height * 0.66) + ' C' + (stamp.minX + width * 0.42) + ' ' + (stamp.minY + height * 0.56) + ', ' + (stamp.minX + width * 0.52) + ' ' + (stamp.minY + height * 0.5) + ', ' + (stamp.minX + width * 0.72) + ' ' + (stamp.minY + height * 0.72), fill: 'none', stroke: ink, 'stroke-width': '1.15', 'stroke-linecap': 'round', opacity: '0.56' });
           appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.24, 0.44], [0.38, 0.34], [0.46, 0.46], [0.32, 0.58], [0.24, 0.44]]) + ' Z', fill: ink, stroke: 'none', opacity: '0.11' });
-        } else if (mark.category === 'Rust') {
+        } else if (defectKey === 'RUST') {
           [[0.25, 0.3, 0.09], [0.56, 0.45, 0.13], [0.78, 0.68, 0.07], [0.36, 0.74, 0.055], [0.7, 0.22, 0.05], [0.48, 0.22, 0.035]].forEach(function (spot) {
             appendAccentNode(accentGroup, 'circle', { cx: stamp.minX + width * spot[0], cy: stamp.minY + height * spot[1], r: Math.max(1.6, size * spot[2]), fill: ink, opacity: '0.32' });
             appendAccentNode(accentGroup, 'circle', { cx: stamp.minX + width * spot[0], cy: stamp.minY + height * spot[1], r: Math.max(2.6, size * spot[2] * 1.8), fill: 'none', stroke: ink, 'stroke-width': '0.9', 'stroke-dasharray': '1 3', opacity: '0.46' });
           });
+        } else if (defectKey === 'MISSING_PART') {
+          appendAccentNode(accentGroup, 'ellipse', { cx: center.x, cy: center.y, rx: width * 0.36, ry: height * 0.3, fill: 'none', stroke: ink, 'stroke-width': '1.5', 'stroke-dasharray': '4 3', opacity: '0.82' });
+          appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.24, 0.5], [0.76, 0.5]]) + ' M' + center.x + ' ' + (stamp.minY + height * 0.24) + ' L' + center.x + ' ' + (stamp.minY + height * 0.76), fill: 'none', stroke: ink, 'stroke-width': '2.1', 'stroke-linecap': 'round', opacity: '0.9' });
+        } else if (defectKey === 'BROKEN_PART') {
+          appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.12, 0.22], [0.38, 0.3], [0.46, 0.52], [0.7, 0.42], [0.9, 0.74]]) + ' ' + makePathFromRatios(stamp, [[0.46, 0.52], [0.3, 0.78], [0.12, 0.84]]), fill: 'none', stroke: ink, 'stroke-width': '2.2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.94' });
+        } else if (defectKey === 'CHIP') {
+          appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.28, 0.2], [0.68, 0.16], [0.84, 0.44], [0.62, 0.8], [0.28, 0.72], [0.16, 0.42], [0.28, 0.2]]) + ' Z', fill: colorToRgba(ink, 0.2), stroke: ink, 'stroke-width': '1.5', opacity: '0.9' });
+          appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.28, 0.2], [0.48, 0.42], [0.68, 0.16]]) + ' ' + makePathFromRatios(stamp, [[0.48, 0.42], [0.62, 0.8]]), fill: 'none', stroke: ink, 'stroke-width': '1', opacity: '0.68' });
+        } else if (defectKey === 'LEAK') {
+          appendAccentNode(accentGroup, 'path', { d: 'M' + center.x + ' ' + (stamp.minY + height * 0.12) + ' C' + (stamp.minX + width * 0.72) + ' ' + (stamp.minY + height * 0.42) + ', ' + (stamp.minX + width * 0.72) + ' ' + (stamp.minY + height * 0.72) + ', ' + center.x + ' ' + (stamp.minY + height * 0.86) + ' C' + (stamp.minX + width * 0.28) + ' ' + (stamp.minY + height * 0.72) + ', ' + (stamp.minX + width * 0.28) + ' ' + (stamp.minY + height * 0.42) + ', ' + center.x + ' ' + (stamp.minY + height * 0.12) + ' Z', fill: colorToRgba(ink, 0.2), stroke: ink, 'stroke-width': '1.6', opacity: '0.9' });
+        } else if (defectKey === 'TYRE_WEAR') {
+          [[0.22, 0.22, 0.74, 0.74], [0.38, 0.16, 0.86, 0.64], [0.14, 0.4, 0.6, 0.86]].forEach(function (tread) {
+            appendAccentNode(accentGroup, 'line', { x1: stamp.minX + width * tread[0], y1: stamp.minY + height * tread[1], x2: stamp.minX + width * tread[2], y2: stamp.minY + height * tread[3], stroke: ink, 'stroke-width': '2.1', 'stroke-linecap': 'round', opacity: '0.82' });
+          });
+        } else if (defectKey === 'LOOSE_PART') {
+          appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.16, 0.42], [0.3, 0.24], [0.44, 0.42]]) + ' ' + makePathFromRatios(stamp, [[0.56, 0.42], [0.7, 0.24], [0.84, 0.42]]) + ' ' + makePathFromRatios(stamp, [[0.16, 0.62], [0.3, 0.8], [0.44, 0.62]]) + ' ' + makePathFromRatios(stamp, [[0.56, 0.62], [0.7, 0.8], [0.84, 0.62]]), fill: 'none', stroke: ink, 'stroke-width': '1.8', 'stroke-linecap': 'round', opacity: '0.9' });
+          appendAccentNode(accentGroup, 'circle', { cx: center.x, cy: center.y, r: size * 0.14, fill: colorToRgba(ink, 0.2), stroke: ink, 'stroke-width': '1.4' });
+        } else if (defectKey === 'ELECTRICAL') {
+          appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.58, 0.08], [0.28, 0.54], [0.5, 0.52], [0.38, 0.92], [0.74, 0.4], [0.52, 0.42], [0.58, 0.08]]) + ' Z', fill: colorToRgba(ink, 0.24), stroke: ink, 'stroke-width': '1.5', 'stroke-linejoin': 'round', opacity: '0.95' });
+        } else if (defectKey === 'MISALIGNMENT') {
+          appendAccentNode(accentGroup, 'rect', { x: stamp.minX + width * 0.12, y: stamp.minY + height * 0.2, width: width * 0.42, height: height * 0.42, fill: 'none', stroke: ink, 'stroke-width': '1.5', opacity: '0.78' });
+          appendAccentNode(accentGroup, 'rect', { x: stamp.minX + width * 0.46, y: stamp.minY + height * 0.38, width: width * 0.42, height: height * 0.42, fill: colorToRgba(ink, 0.12), stroke: ink, 'stroke-width': '1.5', 'stroke-dasharray': '3 2', opacity: '0.9' });
+        } else if (defectKey === 'HOLE') {
+          appendAccentNode(accentGroup, 'ellipse', { cx: center.x, cy: center.y, rx: width * 0.3, ry: height * 0.3, fill: colorToRgba(ink, 0.26), stroke: ink, 'stroke-width': '2', opacity: '0.94' });
+          appendAccentNode(accentGroup, 'ellipse', { cx: center.x, cy: center.y, rx: width * 0.14, ry: height * 0.14, fill: ink, stroke: 'none', opacity: '0.62' });
+        } else if (defectKey === 'TEAR') {
+          appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.12, 0.34], [0.34, 0.5], [0.26, 0.72], [0.52, 0.58], [0.7, 0.82], [0.88, 0.48]]), fill: 'none', stroke: ink, 'stroke-width': '2.2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.94' });
+        } else if (defectKey === 'BURN') {
+          appendAccentNode(accentGroup, 'path', { d: 'M' + center.x + ' ' + (stamp.minY + height * 0.08) + ' C' + (stamp.minX + width * 0.78) + ' ' + (stamp.minY + height * 0.42) + ', ' + (stamp.minX + width * 0.7) + ' ' + (stamp.minY + height * 0.82) + ', ' + center.x + ' ' + (stamp.minY + height * 0.9) + ' C' + (stamp.minX + width * 0.24) + ' ' + (stamp.minY + height * 0.7) + ', ' + (stamp.minX + width * 0.38) + ' ' + (stamp.minY + height * 0.42) + ', ' + center.x + ' ' + (stamp.minY + height * 0.08) + ' Z', fill: colorToRgba(ink, 0.24), stroke: ink, 'stroke-width': '1.5', opacity: '0.92' });
+        } else if (defectKey === 'STAIN') {
+          [[0.34, 0.4, 0.18], [0.58, 0.56, 0.22], [0.7, 0.3, 0.1], [0.3, 0.72, 0.09]].forEach(function (spot) {
+            appendAccentNode(accentGroup, 'ellipse', { cx: stamp.minX + width * spot[0], cy: stamp.minY + height * spot[1], rx: width * spot[2], ry: height * spot[2] * 0.72, fill: colorToRgba(ink, 0.22), stroke: ink, 'stroke-width': '0.8', opacity: '0.62' });
+          });
+        } else if (defectKey === 'GLASS_DAMAGE') {
+          var glassCracks = [
+            [[0.5, 0.5], [0.42, 0.35], [0.3, 0.24], [0.2, 0.08]],
+            [[0.5, 0.5], [0.61, 0.38], [0.72, 0.3], [0.88, 0.18]],
+            [[0.5, 0.5], [0.66, 0.54], [0.78, 0.68], [0.9, 0.78]],
+            [[0.5, 0.5], [0.54, 0.66], [0.48, 0.8], [0.52, 0.94]],
+            [[0.5, 0.5], [0.37, 0.61], [0.29, 0.74], [0.14, 0.86]],
+            [[0.5, 0.5], [0.34, 0.48], [0.2, 0.54], [0.08, 0.48]]
+          ];
+          appendAccentNode(accentGroup, 'circle', { cx: center.x, cy: center.y, r: Math.max(2.4, size * 0.075), fill: 'rgba(255, 255, 255, 0.72)', stroke: ink, 'stroke-width': '1.4', opacity: '0.94' });
+          glassCracks.forEach(function (crack, index) {
+            appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, crack), fill: 'none', stroke: 'rgba(255, 255, 255, 0.82)', 'stroke-width': index % 2 === 0 ? '3.6' : '3', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.66' });
+            appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, crack), fill: 'none', stroke: ink, 'stroke-width': index % 2 === 0 ? '1.45' : '1.15', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.94' });
+          });
+          appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.42, 0.35], [0.52, 0.25], [0.58, 0.14]]), fill: 'none', stroke: ink, 'stroke-width': '0.9', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.72' });
+          appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.66, 0.54], [0.7, 0.43], [0.8, 0.38]]), fill: 'none', stroke: ink, 'stroke-width': '0.85', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.68' });
+          appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.37, 0.61], [0.45, 0.7], [0.41, 0.82]]), fill: 'none', stroke: ink, 'stroke-width': '0.85', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.68' });
         } else {
           appendAccentNode(accentGroup, 'rect', { x: stamp.minX + width * 0.18, y: stamp.minY + height * 0.2, width: width * 0.64, height: height * 0.6, rx: size * 0.08, fill: 'rgba(255, 253, 248, 0.26)', stroke: ink, 'stroke-width': '1.05', 'stroke-dasharray': '3 2', opacity: '0.54' });
           appendAccentNode(accentGroup, 'path', { d: makePathFromRatios(stamp, [[0.22, 0.5], [0.78, 0.5]]) + ' M' + (stamp.minX + width * 0.5) + ' ' + (stamp.minY + height * 0.24) + ' L' + (stamp.minX + width * 0.5) + ' ' + (stamp.minY + height * 0.76), fill: 'none', stroke: ink, 'stroke-width': '1.5', 'stroke-linecap': 'round', opacity: '0.68' });
@@ -6929,11 +7273,12 @@
         var tagLayout = mark.issueTagLayout && mark.issueTagLayout.isCustom ? clampIssueTagLayout(mark.issueTagLayout, pinWidth, pinHeight) : { x: defaultPinX, y: defaultPinY, isCustom: false };
         var pinX = tagLayout.x;
         var pinY = tagLayout.y;
+        var isEditingComment = (mark.id === inlineCommentMarkId && !inlineCommentEditor.classList.contains('is-hidden'));
         var pinGroup = createSvgNode('g', {
-          class: 'annotation-issue-pin' + (shouldShowPrompt ? ' is-selected' : ''),
+          class: 'annotation-issue-pin' + (shouldShowPrompt && !isEditingComment ? ' is-selected' : '') + (isEditingComment ? ' is-hidden' : ''),
           'data-comment-mark-id': mark.id,
           'data-issue-code': issueCode,
-          style: '--issue-color: ' + (config.color || '#64748b') + ';'
+          style: '--issue-color: ' + (config.color || '#64748b') + ';' + (isEditingComment ? ' display: none;' : '')
         });
 
         // Build a multi-segment elbow stem so the line never cuts through the
@@ -7345,7 +7690,7 @@
           node.setAttribute('rx', mark.rx);
           node.setAttribute('ry', mark.ry);
           node.setAttribute('stroke-width', mark.shapeType === 'ring' ? '2.1' : '1.5');
-        } else if (mark.shapeType === 'diamond' || mark.shapeType === 'zigzag' || mark.shapeType === 'peel' || mark.shapeType === 'slash' || mark.shapeType === 'polygon' || mark.shapeType === 'triangle' || mark.shapeType === 'line') {
+        } else if (mark.shapeType === 'diamond' || mark.shapeType === 'zigzag' || mark.shapeType === 'peel' || mark.shapeType === 'slash' || mark.shapeType === 'polygon' || mark.shapeType === 'triangle' || mark.shapeType === 'cross' || mark.shapeType === 'line') {
           node = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
           node.setAttribute('points', mark.points);
           node.setAttribute('stroke-linecap', 'round');
@@ -7568,7 +7913,7 @@
           if (activeTool === 'draw') {
             shapeType = 'draw';
           } else if (activeTool === 'legend') {
-            shapeType = 'legend-region';
+            shapeType = getShapeTypeForDefect(activeDefectId);
           } else if (activeTool === 'shape') {
             shapeType = selectedShapeType;
           }
@@ -7585,7 +7930,7 @@
               shapeType: shapeType,
               partId: currentPartId,
               category: activeDefectId,
-              color: getMarkColor(),
+              color: getDefectConfig(activeDefectId).color,
               start: point,
               points: [point]
             };
@@ -7596,7 +7941,7 @@
               shapeType: shapeType,
               partId: currentPartId,
               category: activeTool === 'shape' ? null : activeDefectId,
-              color: getMarkColor(),
+              color: activeTool === 'shape' ? getMarkColor() : getDefectConfig(activeDefectId).color,
               start: point,
               current: point
             };
@@ -7847,8 +8192,44 @@
         });
       }
 
+      function getGenericLegendIconMarkup(defect) {
+        var label = String(defect.shortLabel || defect.code || '?').slice(0, 3);
+        var safeLabel = label.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        var textColor = normalizeColor(defect.textColor) || '#ffffff';
+        var shape = defect.markerShape || 'circle';
+        var shapeMarkup = '<circle cx="24" cy="14" r="11" fill="currentColor"/>';
+        if (shape === 'square') {
+          shapeMarkup = '<rect x="13" y="3" width="22" height="22" rx="2" fill="currentColor"/>';
+        } else if (shape === 'triangle') {
+          shapeMarkup = '<path d="M24 2 L38 25 L10 25 Z" fill="currentColor"/>';
+        } else if (shape === 'diamond') {
+          shapeMarkup = '<path d="M24 2 L39 14 L24 26 L9 14 Z" fill="currentColor"/>';
+        } else if (shape === 'cross') {
+          shapeMarkup = '<path d="M18 3 H30 V8 H35 V20 H30 V25 H18 V20 H13 V8 H18 Z" fill="currentColor"/>';
+        }
+        return '<svg viewBox="0 0 48 28" aria-hidden="true">' + shapeMarkup + '<text x="24" y="17" text-anchor="middle" font-size="9" font-weight="700" font-family="Arial, sans-serif" fill="' + textColor + '">' + safeLabel + '</text></svg>';
+      }
+
       function getLegendIconMarkup(defectId) {
+        var configuredDefect = getDefectConfig(defectId);
+        var defectDesign = getDefectDesignKey(defectId);
         var baseAttributes = 'fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"';
+        if (defectDesign === 'GLASS_DAMAGE') {
+          return '<svg viewBox="0 0 48 28" aria-hidden="true"><circle cx="24" cy="14" r="2.5" fill="currentColor"/><path d="M24 14 L15 5 M24 14 L33 4 M24 14 L43 11 M24 14 L38 24 M24 14 L21 27 M24 14 L8 23 M24 14 L5 12" ' + baseAttributes + ' stroke-width="1.5"/><path d="M15 5 L20 3 M33 4 L37 8 M38 24 L43 21 M8 23 L12 18" ' + baseAttributes + ' stroke-width="0.9" opacity="0.7"/></svg>';
+        }
+        if (defectDesign === 'LEAK') {
+          return '<svg viewBox="0 0 48 28" aria-hidden="true"><path d="M24 2 C34 12 35 20 24 26 C13 20 14 12 24 2 Z" fill="rgba(47,41,37,0.1)" stroke="currentColor" stroke-width="1.6"/></svg>';
+        }
+        if (defectDesign === 'ELECTRICAL') {
+          return '<svg viewBox="0 0 48 28" aria-hidden="true"><path d="M28 1 L13 16 H23 L19 28 L36 11 H26 Z" fill="rgba(47,41,37,0.1)" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+        }
+        if (defectDesign === 'HOLE') {
+          return '<svg viewBox="0 0 48 28" aria-hidden="true"><ellipse cx="24" cy="14" rx="13" ry="10" fill="rgba(47,41,37,0.16)" stroke="currentColor" stroke-width="1.8"/><ellipse cx="24" cy="14" rx="5" ry="4" fill="currentColor" opacity="0.55"/></svg>';
+        }
+        if (defectDesign === 'OTHER') {
+          return getGenericLegendIconMarkup(configuredDefect);
+        }
+        defectId = ({ DENT: 'Dent', WATER_DENT: 'Water Dent', OXIDATION: 'Oxidation', SCRATCH: 'Scratch', CRACK: 'Crack', PAINT_PEEL: 'Paint Peel', RUST: 'Rust', MISSING_PART: 'Missing Part' })[defectDesign] || defectId;
         if (defectId === 'Dent') {
           return '<svg viewBox="0 0 48 28" aria-hidden="true"><ellipse cx="24" cy="14" rx="15" ry="9" fill="rgba(47,41,37,0.08)" stroke="currentColor" stroke-width="1.5"/><ellipse cx="24" cy="14" rx="9" ry="5" ' + baseAttributes + ' stroke-width="1.7"/><ellipse cx="24" cy="14" rx="4" ry="2.4" fill="currentColor" opacity="0.3"/></svg>';
         }
@@ -7878,16 +8259,23 @@
 
       function renderLegend() {
         legendList.innerHTML = '';
-        defectTypes.forEach(function (defect, index) {
+        var selectableLegends = defectTypes.filter(isSelectableDefectLegend);
+        if (selectableLegends.length !== defectTypes.length) {
+          defectTypes = selectableLegends;
+          if (!defectTypes.some(function (defect) { return defect.id === activeDefectId; })) {
+            activeDefectId = null;
+          }
+        }
+        selectableLegends.forEach(function (defect, index) {
           var shortcut = String(index + 1);
           var button = document.createElement('button');
           button.className = 'legend-chip' + (defect.id === activeDefectId ? ' active' : '');
           button.type = 'button';
-          button.title = defect.id;
+          button.title = defect.name || defect.id;
           button.setAttribute('data-defect', defect.id);
-          button.setAttribute('data-tooltip', defect.id);
+          button.setAttribute('data-tooltip', defect.name || defect.id);
           button.setAttribute('data-shortcut', shortcut);
-          button.setAttribute('aria-label', defect.id);
+          button.setAttribute('aria-label', defect.name || defect.id);
           applyIssueStyleVars(button, defect);
 
           var icon = document.createElement('span');
@@ -7898,7 +8286,7 @@
 
           var label = document.createElement('span');
           label.className = 'legend-chip-label';
-          label.textContent = (defect.code || 'I') + ' - ' + defect.id;
+          label.textContent = (defect.shortLabel || defect.code || 'I') + ' - ' + (defect.name || defect.id);
           button.appendChild(label);
           legendList.appendChild(button);
         });
@@ -7910,12 +8298,6 @@
             activeDefectId = button.getAttribute('data-defect');
             if (!currentPartId) {
               cancelDrawingSession();
-              setTool('legend');
-              renderLegend();
-              updateBadges();
-              updateStatus('Select the part before editing it.', true);
-              showSelectionAlert('Select the part before editing it.');
-              return;
             }
             setTool('legend');
             renderLegend();
@@ -8011,10 +8393,7 @@
 
         activeDefectId = defect.id;
         if (!currentPartId) {
-          renderLegend();
-          updateBadges();
-          showSelectPartBeforeEditingAlert();
-          return true;
+          cancelDrawingSession();
         }
         setTool('legend');
         renderLegend();
@@ -8448,13 +8827,13 @@
       function resetAll() {
         cancelDrawingSession();
         var removedMarks = getAllMarks();
-        
+
         // Close comment editor and clear session tracking for removed marks
         closeCommentEditorForDeletedMarks(removedMarks);
         removeSessionMarkTrackingByIds(removedMarks.map(function (mark) {
           return mark.id;
         }));
-        
+
         // Clear local annotations state
         annotations = {};
         nextMarkId = 1;
@@ -8462,7 +8841,7 @@
         renderOverlayMarks();
         updateStatus('');
         markDirty();
-        
+
         // Clear subform in CRM by setting it to an empty array
         var zoho = getZohoSdk();
         if (zoho && crmState.recordId) {
@@ -8471,7 +8850,7 @@
             id: crmState.recordId
           };
           updateData[subformApiName] = [];
-          
+
           zoho.CRM.API.updateRecord({
             Entity: crmState.moduleName || 'Deals',
             APIData: updateData,
@@ -8607,10 +8986,12 @@
 
           crmState.isSaving = true;
           updateStatus('Uploading mapped attachments...');
+          console.log('[DEBUG-SAVE] -- saveInspection Process Started --');
 
           var marksToProcess = getAllMarks().filter(function (m) {
             return m.attachmentImageData && !m.attachmentImageEncryptedId;
           });
+          console.log('[DEBUG-SAVE] Marks needing ZFS uploaded images:', marksToProcess.length);
 
           var uploadPromises = marksToProcess.map(function (m) {
             var fileOrBlob = m.attachmentOriginalFile;
@@ -8619,10 +9000,11 @@
             }
             var fName = m.attachmentImageName || ('attachment_' + m.id + '.png');
             return uploadImageToZfs(zoho, fileOrBlob, fName).then(function (fileRef) {
+              console.log('[DEBUG-SAVE] Extracted ZFS encryptedId for mark', m.id, '->', fileRef.encryptedId);
               m.attachmentImageEncryptedId = fileRef.encryptedId;
               return true;
             }).catch(function (err) {
-              console.warn('[saveInspection] Image upload failed for mark ' + m.id, err);
+              console.warn('[DEBUG-SAVE] Image upload failed for mark ' + m.id, err);
               // Throw so the overall save fails if an image upload fails
               throw err;
             });
@@ -8647,6 +9029,9 @@
             var expectedSubformRows = upsertRows.length;
             var payload = { id: crmState.recordId };
             payload[activeSubformApiName] = upsertRows;
+
+            console.log('[DEBUG-SAVE] Dispatching subform upsert API call. Total rows to sync:', expectedSubformRows);
+            console.log('[DEBUG-SAVE] Full payload object:', JSON.stringify(payload));
 
             var upsertPromise = upsertRows.length
               ? ZOHO.CRM.API.updateRecord({
@@ -8791,21 +9176,21 @@
       });
       clearCommentButton.addEventListener('click', clearSelectedMarkComment);
       closeCommentCardButton.addEventListener('click', hideCommentCard);
-      
+
       // ── Auto-resize comment textarea based on content ──────────────────
       function autoResizeCommentTextarea() {
         if (!commentInput) { return; }
-        
+
         // Reset height to min to get accurate scrollHeight
         commentInput.style.height = '54px';
-        
+
         // Calculate required height based on content
         var scrollHeight = commentInput.scrollHeight;
         var newHeight = Math.max(54, Math.min(200, scrollHeight));
-        
+
         commentInput.style.height = newHeight + 'px';
       }
-      
+
       commentInput.addEventListener('input', function () {
         if (commentInput.value.length > COMMENT_MAX_LENGTH) {
           commentInput.value = normalizeCommentText(commentInput.value);
@@ -8853,11 +9238,13 @@
       function handleImageUpload(inputElement, callback) {
         if (!inputElement.files || !inputElement.files[0]) return;
         var file = inputElement.files[0];
+        console.log('[DEBUG-UPLOAD] ** handleImageUpload Started **');
+        console.log('[DEBUG-UPLOAD] Selected File:', file.name, '|| Type:', file.type, '|| Size:', file.size);
 
         var readerForCanvas = new FileReader();
-        readerForCanvas.onload = function(e) {
+        readerForCanvas.onload = function (e) {
           var image = new Image();
-          
+
           image.onload = function () {
             try {
               var MAX_WIDTH = 1200;
@@ -8888,7 +9275,7 @@
               var arr = new Uint8Array(bin.length);
               for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
               var compressedBlob = new Blob([arr], { type: mimeType });
-              
+
               var compressedFile;
               try {
                 compressedFile = new File([compressedBlob], fileName, { type: mimeType });
@@ -8896,6 +9283,7 @@
                 compressedFile = compressedBlob;
                 compressedFile.name = fileName;
               }
+              console.log('[DEBUG-UPLOAD] Compression complete. Compressed size:', compressedFile.size, '|| Format:', compressedFile.type);
               callback(dataUrl, fileName, compressedFile);
             } catch (err) {
               // Fallback to raw data if canvas fails
@@ -8903,9 +9291,10 @@
             }
             inputElement.value = '';
           };
-          
+
           image.onerror = function () {
             // Not a readable image (e.g. PDF), just pass raw string and file
+            console.log('[DEBUG-UPLOAD] Warning: image.onerror triggered (unsupported render format). Skipping compression, passing raw original.');
             callback(e.target.result, file.name || 'attachment', file);
             inputElement.value = '';
           };
@@ -8916,9 +9305,126 @@
       }
 
       if (inlineCommentImageBtn) {
-        inlineCommentImageBtn.addEventListener('click', function () { inlineCommentImageInput.click(); });
-        inlineCommentImageInput.addEventListener('change', function () {
-          handleImageUpload(inlineCommentImageInput, function (data, name, originalFile) {
+        var isDesktop = !(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+
+        function openDesktopWebcam(callback) {
+          var overlay = document.getElementById('webcamOverlay');
+          var video = document.getElementById('webcamVideo');
+          var canvas = document.getElementById('webcamCanvas');
+          var captureBtn = document.getElementById('webcamCaptureBtn');
+          var cancelBtn = document.getElementById('webcamCancelBtn');
+          var errorMsg = document.getElementById('webcamErrorMsg');
+          var stream = null;
+
+          overlay.style.display = 'flex';
+          errorMsg.style.display = 'none';
+          document.body.style.overflow = 'hidden';
+
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            errorMsg.textContent = 'Webcam not supported in this browser environment.';
+            errorMsg.style.display = 'block';
+            return;
+          }
+
+          navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(function (s) {
+              stream = s;
+              video.srcObject = stream;
+            })
+            .catch(function (err) {
+              errorMsg.textContent = 'Camera access denied or unavailable.';
+              errorMsg.style.display = 'block';
+            });
+
+          function closeWebcam() {
+            if (stream) {
+              stream.getTracks().forEach(function (track) { track.stop(); });
+            }
+            video.srcObject = null;
+            overlay.style.display = 'none';
+            document.body.style.overflow = '';
+            cleanup();
+          }
+
+          function capturePhoto() {
+            if (!stream) return;
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            var dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            var bin = atob(dataUrl.split(',')[1]);
+            var arr = new Uint8Array(bin.length);
+            for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+            var blob = new Blob([arr], { type: 'image/jpeg' });
+            var fileName = 'webcam_' + new Date().getTime() + '.jpg';
+            
+            var rawFile;
+            try {
+              rawFile = new File([blob], fileName, { type: 'image/jpeg' });
+            } catch (err) {
+              rawFile = blob;
+              rawFile.name = fileName;
+            }
+
+            closeWebcam();
+
+            // Intercept standard logic with our captured fake input
+            var fakeInput = { files: [rawFile], value: '' };
+            handleImageUpload(fakeInput, callback);
+          }
+
+          function cleanup() {
+            captureBtn.removeEventListener('click', capturePhoto);
+            cancelBtn.removeEventListener('click', closeWebcam);
+          }
+
+          captureBtn.addEventListener('click', capturePhoto);
+          cancelBtn.addEventListener('click', closeWebcam);
+        }
+
+        inlineCommentImageBtn.addEventListener('click', function () { 
+          inlineCommentImageInput.click(); 
+        });
+
+        inlineCommentCameraBtn.addEventListener('click', function () { 
+          if (isDesktop) { 
+            openDesktopWebcam(function (data, name, originalFile) {
+              var fakeInputEl = { value: '' };
+              inlineCommentCameraInput.dispatchEvent(new Event('change', { bubbles: true })); // Trigger listeners if any
+              handleImageUpload({ files: [originalFile] }, function() {
+                 pendingCommentAttachment = data;
+                 pendingCommentAttachmentName = name;
+                 pendingCommentOriginalFile = originalFile;
+                 var mark = findMarkById(inlineCommentMarkId);
+                 if (mark) {
+                   if (!mark._deletedImageId) {
+                     if (mark.attachmentImages && mark.attachmentImages.length > 0) {
+                       mark._deletedImageId = mark.attachmentImages[0].fileId || mark.attachmentImages[0].encryptedId;
+                     } else if (mark.attachmentImageEncryptedId) {
+                       mark._deletedImageId = mark.attachmentImageEncryptedId;
+                     }
+                   }
+                   mark.attachmentImageUrl = null;
+                   mark.attachmentImageEncryptedId = null;
+                   mark._imageNeedsCrmReplace = true;
+                   mark.attachmentOriginalFile = originalFile;
+                   mark.attachmentImageData = data;
+                   mark.attachmentImageName = name;
+                   mark._imageExplicitlyDeleted = false;
+                 }
+                 updateAttachmentPreview(inlineCommentAttachmentPreview, inlineCommentAttachmentName, data, name, null, inlineCommentImageBtn);
+                 inlineCommentInput.focus();
+                 saveInlineCommentEditor();
+                 updateStatus('Webcam snippet captured.');
+              });
+            });
+          } else { 
+            inlineCommentCameraInput.click(); 
+          }
+        });
+        var handleInlineImageUploadCallback = function (data, name, originalFile) {
             pendingCommentAttachment = data;
             pendingCommentAttachmentName = name;
             pendingCommentOriginalFile = originalFile;
@@ -8937,12 +9443,22 @@
               mark.attachmentOriginalFile = originalFile;
               mark.attachmentImageData = data;
               mark.attachmentImageName = name;
+              mark._imageExplicitlyDeleted = false;
               if (mark.attachmentImages) mark.attachmentImages = [];
             }
             updateAttachmentPreview(inlineCommentAttachmentPreview, inlineCommentAttachmentName, data, name, null, inlineCommentImageBtn);
             saveInlineCommentEditor();
-          });
+          };
+
+        inlineCommentImageInput.addEventListener('change', function () {
+          handleImageUpload(inlineCommentImageInput, handleInlineImageUploadCallback);
         });
+        
+        inlineCommentCameraInput.addEventListener('change', function () {
+          handleImageUpload(inlineCommentCameraInput, handleInlineImageUploadCallback);
+        });
+          // Handled via shared callback
+
         inlineCommentAttachmentRemove.addEventListener('click', function () {
           pendingCommentAttachment = null;
           pendingCommentAttachmentName = '';
@@ -8969,9 +9485,48 @@
       }
 
       if (commentImageBtn) {
-        commentImageBtn.addEventListener('click', function () { commentImageInput.click(); });
-        commentImageInput.addEventListener('change', function () {
-          handleImageUpload(commentImageInput, function (data, name, originalFile) {
+        commentImageBtn.addEventListener('click', function () { 
+          commentImageInput.click(); 
+        });
+
+        commentCameraBtn.addEventListener('click', function () { 
+          if (isDesktop) { 
+            openDesktopWebcam(function (data, name, originalFile) {
+              handleImageUpload({ files: [originalFile] }, function() {
+                 pendingCommentAttachment = data;
+                 pendingCommentAttachmentName = name;
+                 pendingCommentOriginalFile = originalFile;
+                 var mark = findMarkById(inlineCommentMarkId || selectedMarkId);
+                 if (mark) {
+                   if (!mark._deletedImageId) {
+                     if (mark.attachmentImages && mark.attachmentImages.length > 0) {
+                       mark._deletedImageId = mark.attachmentImages[0].fileId || mark.attachmentImages[0].encryptedId;
+                     } else if (mark.attachmentImageEncryptedId) {
+                       mark._deletedImageId = mark.attachmentImageEncryptedId;
+                     }
+                   }
+                   mark.attachmentImageUrl = null;
+                   mark.attachmentImageEncryptedId = null;
+                   mark._imageNeedsCrmReplace = true;
+                   mark.attachmentOriginalFile = originalFile;
+                   mark.attachmentImageData = data;
+                   mark.attachmentImageName = name;
+                   mark._imageExplicitlyDeleted = false;
+                 }
+                 updateAttachmentPreview(commentAttachmentPreview, commentAttachmentName, data, name, null, commentImageBtn);
+                 if (typeof saveCommentEditor === 'function' && !inlineCommentMarkId) {
+                   saveCommentEditor();
+                 } else if (inlineCommentMarkId) {
+                   saveInlineCommentEditor();
+                 }
+                 updateStatus('Webcam snippet captured.');
+              });
+            });
+          } else { 
+            commentCameraInput.click(); 
+          }
+        });
+        var handleCommentImageUploadCallback = function (data, name, originalFile) {
             pendingCommentAttachment = data;
             pendingCommentAttachmentName = name;
             pendingCommentOriginalFile = originalFile;
@@ -8990,17 +9545,26 @@
               mark.attachmentOriginalFile = originalFile;
               mark.attachmentImageData = data;
               mark.attachmentImageName = name;
+              mark._imageExplicitlyDeleted = false;
               if (mark.attachmentImages) mark.attachmentImages = [];
             }
             updateAttachmentPreview(commentAttachmentPreview, commentAttachmentName, data, name, null, commentImageBtn);
-            // Save the parent comment editor if open
             if (typeof saveCommentEditor === 'function' && !inlineCommentMarkId) {
               saveCommentEditor();
             } else if (inlineCommentMarkId) {
               saveInlineCommentEditor();
             }
-          });
+          };
+
+        commentImageInput.addEventListener('change', function () {
+          handleImageUpload(commentImageInput, handleCommentImageUploadCallback);
         });
+
+        commentCameraInput.addEventListener('change', function () {
+          handleImageUpload(commentCameraInput, handleCommentImageUploadCallback);
+        });
+          // Handled via shared callback
+
         commentAttachmentRemove.addEventListener('click', function () {
           pendingCommentAttachment = null;
           pendingCommentAttachmentName = '';
@@ -10264,607 +10828,607 @@
       function createInspectionDocument(jsPDFCtor, docOptions) {
         console.log('=== createInspectionDocument called ===');
         console.log('docOptions:', docOptions);
-        
+
         docOptions = docOptions || {};
         var signDetails = docOptions.signDetails || {};
         var issueMarks = Array.isArray(docOptions.issueMarks) ? docOptions.issueMarks : [];
         var alainLogo = docOptions.alainLogo || null;
         var kgbLogo = docOptions.kgbLogo || null;
         var canvas = docOptions.canvas || null;
-        
+
         var imgDataUrl = '';
         if (canvas) {
-            try {
-                imgDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-            } catch(e) {}
+          try {
+            imgDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          } catch (e) { }
         }
-        
+
         var phoneIcon = null; // not strictly necessary unless imported
         var emailIcon = null;
         var webIcon = null;
         var socialIcon = null;
         var fbIcon = null;
         var ytIcon = null;
-        
+
         // Remove or ignore options.signData in favor of signDetails
 
-                var doc = new jsPDFCtor({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-                var pageW = doc.internal.pageSize.getWidth();
-                var pageH = doc.internal.pageSize.getHeight();
-                var margin = 40;
-                var now = new Date();
-                var recordData = crmState.recordData || {};
-
-                // ========== DEBUG LOGGING ==========
-                console.log('=== PDF GENERATION DEBUG ===');
-                console.log('Full crmState object:', crmState);
-                console.log('recordData object:', recordData);
-                console.log('recordData keys:', Object.keys(recordData));
-                console.log('signDetails object:', signDetails);
-                console.log('issueMarks count:', issueMarks.length);
-                console.log('=== END DEBUG ===');
-                // ===================================
-
-                function getFieldValue(value) {
-                  if (value === null || value === undefined) return '';
-                  if (typeof value === 'string') return value;
-                  if (typeof value === 'number') return String(value);
-                  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-                  if (typeof value === 'object') {
-                    if (value.name) return String(value.name);
-                    if (value.display_value) return String(value.display_value);
-                    return '';
-                  }
-                  return String(value);
-                }
-
-                // Custom Header Banner function
-                function drawHeaderBanner() {
-                  // Draw left logo
-                  if (alainLogo) {
-                    var aspect1 = alainLogo.width / alainLogo.height;
-                    var h1 = 36;
-                    var w1 = h1 * aspect1;
-                    doc.addImage(alainLogo.dataUrl, 'PNG', margin, 17, w1, h1);
-                  }
-                }
-
-                // Helper for section titles
-                function drawSectionTitle(title, y) {
-                  doc.setFillColor(243, 244, 246); // Light gray #f3f4f6
-                  doc.rect(margin, y - 16, pageW - margin * 2, 24, 'F');
-                  doc.setTextColor(31, 41, 55);
-                  doc.setFontSize(12);
-                  doc.setFont('helvetica', 'bold');
-                  doc.text(title, margin + 10, y);
-                  return y + 16; // Return new yPos
-                }
-
-                // ══════════════════════════════════════════════════════════
-                // PAGE 1 — VEHICLE RECEIVED FORM
-                // ══════════════════════════════════════════════════════════
-                drawHeaderBanner();
-
-                var yPos = 80;
-                doc.setTextColor(31, 41, 55);
-                doc.setFontSize(22);
-                doc.setFont('helvetica', 'bold');
-                doc.text('VEHICLE RECEIVED FORM', pageW / 2, yPos, { align: 'center' });
-                yPos += 25;
-
-                // ── Top Section General Info ──
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'normal');
-
-                var dateStr = now.toLocaleDateString();
-                var timeStr = now.toLocaleTimeString();
-
-                // Date boxes (8 smaller boxes for DD MM YYYY)
-                doc.text('Date:', margin, yPos);
-                doc.setFontSize(10);
-
-                yPos += 20;
-                doc.text('Driver:', margin, yPos);
-                doc.line(margin + 35, yPos + 2, margin + 120, yPos + 2);
-                doc.text(getFieldValue(recordData.Consigned_By), margin + 38, yPos);
-
-                doc.text('Petrol Level:', margin + 140, yPos);
-                doc.line(margin + 205, yPos + 2, margin + 280, yPos + 2);
-                doc.text(getFieldValue(recordData.Petrol_Level), margin + 210, yPos);
-
-                // Branch boxes on right
-                var bxX = pageW - margin - 170;
-                doc.line(margin + 300, yPos + 2, pageW - margin, yPos + 2); // fill line
-
-                doc.rect(bxX, yPos - 10, 12, 12);
-                doc.text('SZR', bxX + 16, yPos);
-                doc.rect(bxX + 45, yPos - 10, 12, 12);
-                doc.text('Al AWEER', bxX + 61, yPos);
-                doc.rect(bxX + 120, yPos - 10, 12, 12);
-                doc.text('Al AIN', bxX + 136, yPos);
-
-                var branch = getFieldValue(recordData.Branch || recordData.Location || '').toUpperCase();
-
-                function drawTick(tx, ty) {
-                  doc.setLineWidth(1.5);
-                  doc.line(tx, ty - 1, tx + 3, ty + 2);
-                  doc.line(tx + 3, ty + 2, tx + 8, ty - 5);
-                  doc.setLineWidth(1);
-                }
-                if (branch.indexOf('SZR') > -1) drawTick(bxX + 2, yPos - 4);
-                if (branch.indexOf('AWEER') > -1) drawTick(bxX + 47, yPos - 4);
-                if (branch.indexOf('AIN') > -1) drawTick(bxX + 122, yPos - 4);
-
-                yPos += 20;
-                doc.text('Time:', margin, yPos);
-                doc.line(margin + 35, yPos + 2, margin + 120, yPos + 2);
-                doc.text(timeStr, margin + 38, yPos);
-
-                doc.text('Error/s:', margin + 140, yPos);
-                doc.line(margin + 205, yPos + 2, margin + 280, yPos + 2);
-                doc.text('', margin + 210, yPos);
-
-                yPos += 15;
-
-                // ── Main Structure Grid ──
-                var leftW = 250; // Increased left section width to allow larger image natively
-                var rightX = margin + leftW;
-                var rightW = pageW - margin - rightX;
-                var gridTop = yPos;
-
-                // 1. Left Column: Vehicle Details
-                doc.setFillColor(230, 230, 230); // light gray for headers
-                doc.rect(margin, gridTop, leftW, 20, 'S'); // Make and Model Header Background uses Stroke (No fill)
-                doc.setFont('helvetica', 'bold');
-                doc.text('Make and Model:', margin + 5, gridTop + 14);
-                doc.setFont('helvetica', 'normal');
-                var makeValue = typeof recordData.Make === 'object' ? getFieldValue(recordData.Make.name) : getFieldValue(recordData.Make);
-                var modelValue = typeof recordData.Model === 'object' ? getFieldValue(recordData.Model.name) : getFieldValue(recordData.Model);
-                doc.text(makeValue + ' ' + modelValue, margin + 100, gridTop + 14);
-
-                doc.rect(margin, gridTop, leftW, 170); // the entire left details bounding box properly spaced
-
-                doc.setFont('helvetica', 'bold');
-                doc.text('V.I.N:', margin + 5, gridTop + 38);
-                doc.setFont('helvetica', 'normal');
-
-                // VIN Boxes
-                var vin = getFieldValue(recordData.V_I_N || recordData.VIN || '').toUpperCase();
-                var vinBoxW = Math.floor((leftW - 55) / 17);
-                for (var i = 0; i < 17; i++) {
-                  var vx = margin + 50 + (i * vinBoxW);
-                  doc.rect(vx, gridTop + 25, vinBoxW, 17);
-                  if (vin[i]) {
-                    doc.text(vin[i], vx + 3, gridTop + 37);
-                  }
-                }
-
-                doc.line(margin, gridTop + 45, margin + leftW, gridTop + 45); // line below VIN
-                doc.rect(margin, gridTop + 45, leftW, 35, 'S'); // Extra height added (35 instead of 25)
-
-                var yy = gridTop + 57;
-                var lineY = gridTop + 80;
-                doc.setFontSize(8.5);
-
-                doc.setFont('helvetica', 'bold');
-                doc.text('Year Model:', margin + 3, yy);
-                doc.setFont('helvetica', 'normal');
-                doc.text(doc.splitTextToSize(getFieldValue(recordData.Year_Model), 55)[0] || '', margin + 3, yy + 15);
-                doc.line(margin + 65, gridTop + 45, margin + 65, lineY);
-
-                doc.setFont('helvetica', 'bold');
-                doc.text('Mileage:', margin + 68, yy);
-                doc.setFont('helvetica', 'normal');
-                doc.text(doc.splitTextToSize(getFieldValue(recordData.Mileage), 40)[0] || '', margin + 68, yy + 15);
-                doc.line(margin + 110, gridTop + 45, margin + 110, lineY);
-
-                var spec = getFieldValue(recordData.Specs || recordData.Spec || '');
-                var specUp = spec.toUpperCase();
-                doc.setFont('helvetica', 'bold');
-                doc.text('GCC', margin + 113, yy);
-                if (specUp.indexOf('GCC') > -1) drawTick(margin + 119, yy + 14);
-                doc.line(margin + 140, gridTop + 45, margin + 140, lineY);
-
-                doc.text('Euro', margin + 143, yy);
-                if (specUp.indexOf('EURO') > -1 || specUp.indexOf('EUR') > -1) drawTick(margin + 149, yy + 14);
-                doc.line(margin + 170, gridTop + 45, margin + 170, lineY);
-
-                doc.text('U.S.A', margin + 173, yy);
-                if (specUp.indexOf('USA') > -1 || specUp.indexOf('U.S.A') > -1) drawTick(margin + 179, yy + 14);
-                doc.line(margin + 200, gridTop + 45, margin + 200, lineY);
-
-                doc.text('Other', margin + 203, yy);
-                if (spec && specUp.indexOf('GCC') === -1 && specUp.indexOf('EURO') === -1 && specUp.indexOf('USA') === -1) {
-                  doc.setFont('helvetica', 'normal');
-                  doc.text(doc.splitTextToSize(spec, 55)[0] || '', margin + 203, yy + 15);
-                }
-
-                doc.line(margin, lineY, margin + leftW, lineY); // line below Year/Mileage
-
-                // Colors section replaced with distinct clean text values
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'bold');
-                doc.text('Exterior Colour:', margin + 5, lineY + 15);
-                doc.setFont('helvetica', 'normal');
-                doc.text(doc.splitTextToSize(getFieldValue(recordData.Exterior_Color), leftW - 10)[0] || '', margin + 5, lineY + 30);
-
-                doc.line(margin, lineY + 45, margin + leftW, lineY + 45);
-
-                doc.setFont('helvetica', 'bold');
-                doc.text('Interior Colour:', margin + 5, lineY + 60);
-                doc.setFont('helvetica', 'normal');
-                doc.text(doc.splitTextToSize(getFieldValue(recordData.Interior_Color), leftW - 10)[0] || '', margin + 5, lineY + 75);
-
-                // 2. Right Column: Vehicle Items
-                doc.rect(rightX, gridTop, rightW, 275); // increased height from 250 to 275 to accommodate 'Others:' field
-                doc.rect(rightX, gridTop, rightW, 20, 'S'); // Removed 'FD' to fix red/dark headers
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(10);
-                doc.text('Vehicle Items:', rightX + 5, gridTop + 14);
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(8.5); // Making slightly smaller to avoid overlap
-
-                var rightItemsY = gridTop + 35;
-                var lineH = 13.5;
-
-                var rightCol1 = [
-                  '__ Key/s _______', '__ Service Book', '__ Manual Book (EN | AR)',
-                  '__ Reg. Card', '__ Fire Extinguisher',
-                  '__ Tools', '__ Transport Docs',
-                  '__ Car Cover', '__ Car Charger', '__ Seat Cover',
-                  '__ Spare Tyre', '__ Carpets | Matts', '__ First Aid Kit',
-                  '__ Safety Triangle', '__ Tyre Compressor'
-                ];
-
-                var rightCol2 = [
-                  '', '', '',
-                  '__ Expired', '',
-                  '', '__ NOC  | __ VCC',
-                  '', '', '',
-                  '__ Remotes', '__ Pillow', '__ Warranty',
-                  '__ Custom Paper', '__ Repair Kit'
-                ];
-
-                for (var k = 0; k < rightCol1.length; k++) {
-                  doc.text(rightCol1[k], rightX + 3, rightItemsY);
-                  if (rightCol2[k]) {
-                    doc.text(rightCol2[k], rightX + 100, rightItemsY); // squeezed to compensate
-                  }
-                  rightItemsY += lineH;
-                }
-
-                rightItemsY += 8;
-                doc.text('Plate Number:', rightX + 5, rightItemsY);
-                doc.rect(rightX + 70, rightItemsY - 10, 25, 12); // Plate number box
-                doc.text(doc.splitTextToSize(getFieldValue(recordData.Plate_Number), 100)[0] || '', rightX + 75, rightItemsY - 1);
-                doc.line(rightX + 100, rightItemsY + 2, rightX + rightW - 10, rightItemsY + 2);
-
-                rightItemsY += 15;
-                doc.text('Others:', rightX + 5, rightItemsY);
-                doc.line(rightX + 45, rightItemsY + 2, rightX + rightW - 10, rightItemsY + 2);
-
-                // Keys mappings manually
-                var recordKeysValue = String(getFieldValue(recordData.Keys));
-                if (recordKeysValue !== 'N/A' && recordKeysValue.trim() !== '') {
-                  doc.setFont('helvetica', 'bold');
-                  doc.setTextColor(200, 0, 0);
-                  doc.text(recordKeysValue, rightX + 40, gridTop + 34);
-                  doc.setTextColor(31, 41, 55);
-                }
-                doc.setFont('helvetica', 'normal');
-
-                // ── Bottom Sections below grids ──
-                var codeTop = gridTop + 275; // Pushed down from 250 to 275 avoiding overlap with 'Others:'
-                doc.rect(rightX, codeTop, rightW, 115); // increased box height from 92 to 115 for plenty of space
-
-                doc.setFontSize(9);
-                doc.setFont('helvetica', 'bold');
-                doc.text('Issue Codes:', rightX + 5, codeTop + 13);
-                doc.setFontSize(8);
-                doc.setFont('helvetica', 'normal');
-
-                var codeListL = [
-                  'RP - Repaint', 'PC - Paint Chip', 'GS - Glass Scratch',
-                  'GB - Glass Broken', 'DD - Dents / Dings', 'CR - Curb Rash',
-                  'LM - Loose Molding', 'CD - Car is Dirty'
-                ];
-                var codeListR = [
-                  'SH - Swirls Hologram', 'WS - Water Spots', 'OX - Oxidation',
-                  'CF - Clear Coat Failure', 'DS - Deep Scratch', 'UD - Unknown Defect',
-                  'CS - Cracks', 'CC - Car is Clean'
-                ];
-
-                // Now spacing is much looser (11.5 points per row instead of 9.5)
-                for (var c = 0; c < codeListL.length; c++) {
-                  doc.text(codeListL[c], rightX + 3, codeTop + 27 + (c * 11.5));
-                  var rXOffset = rightX + 115; // Tightened string offset to account for smaller width
-                  doc.text(codeListR[c], rXOffset, codeTop + 27 + (c * 11.5));
-                }
-
-                var notesTop = codeTop + 115;
-                doc.rect(rightX, notesTop, rightW, 60); // increased Notes slightly too (60 instead of 55)
-                doc.setFontSize(9);
-                doc.setFont('helvetica', 'bold');
-                doc.text('Notes:', rightX + 5, notesTop + 13);
-
-                var priceTop = notesTop + 60;
-                doc.rect(rightX, priceTop, rightW, 25); // Cost Price | Selling
-                doc.text('Cost Price:', rightX + 5, priceTop + 13);
-                doc.line(rightX + rightW / 2, priceTop, rightX + rightW / 2, priceTop + 25);
-                doc.text('Selling:', rightX + rightW / 2 + 5, priceTop + 13);
-
-                var consignedTop = priceTop + 25;
-                doc.rect(rightX, consignedTop, rightW, 25);
-                doc.text('Consigned By:', rightX + 5, consignedTop + 13);
-
-                var inspectedTop = consignedTop + 25;
-                doc.rect(rightX, inspectedTop, rightW, 25);
-                doc.text('Inspected By:', rightX + 5, inspectedTop + 13);
-
-                var sigTop = inspectedTop + 25;
-                doc.rect(rightX, sigTop, rightW, 45);
-                doc.setFont('helvetica', 'normal');
-                doc.text('Name: _______________________________', rightX + 5, sigTop + 14);
-                doc.text('Mobile No: ___________________________', rightX + 5, sigTop + 28);
-                doc.text('Signature: ___________________________', rightX + 5, sigTop + 41);
-
-                // Showroom Manager signature moved up (no image in left column anymore)
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'bold');
-                doc.text('Showroom Manager: ______________________', margin, gridTop + 185);
-
-                // ══════════════════════════════════════════════════════════
-                // PAGE 2 — Inspection Visual & Issue Log
-                // ══════════════════════════════════════════════════════════
-                doc.addPage();
-                drawHeaderBanner();
-
-                yPos = 90;
-                
-                // Add Inspection Image at top of Page 2
-                if (imgDataUrl) {
-                  var aspect = canvas.width / canvas.height;
-                  var maxW = pageW - margin * 2;
-                  var maxH = 200; // Max height for image on page 2
-                  var drawW = maxW;
-                  var drawH = maxW / aspect;
-                  if (drawH > maxH) {
-                    drawH = maxH;
-                    drawW = maxH * aspect;
-                  }
-                  var cx = margin + (maxW - drawW) / 2;
-                  var cy = yPos;
-                  doc.addImage(imgDataUrl, 'JPEG', cx, cy, drawW, drawH);
-                  yPos = cy + drawH + 20; // Move yPos below image
-                }
-                
-                yPos = drawSectionTitle('ISSUE LOG', yPos);
-                yPos += 15;
-
-                var tableX = margin;
-                var tableW = pageW - margin * 2;
-
-                doc.setFontSize(12);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(31, 41, 55);
-                doc.text('Total Issues Found: ' + issueMarks.length, tableX, yPos);
-                yPos += 20;
-
-                if (!issueMarks.length) {
-                  doc.setFontSize(11);
-                  doc.setFont('helvetica', 'italic');
-                  doc.setTextColor(107, 114, 128); // #6b7280
-                  doc.text('No issues logged in this inspection.', tableX, yPos);
-                } else {
-                  issueMarks.forEach(function (mark, idx) {
-                    // Pre-calc height to handle pagination
-                    var comment = normalizeCommentText(mark.comment) || 'No comment added.';
-                    var commentLines = doc.splitTextToSize(comment, tableW - 30);
-                    var rowH = 16 + 14 + commentLines.length * 12 + 10;
-
-                    var imgH = 0;
-                    var imgW = 0;
-                    if (mark._preloadedImage && mark._preloadedImage.dataUrl) {
-                      var aspect = mark._preloadedImage.width / mark._preloadedImage.height;
-                      imgW = 150; // Max width for issue image
-                      imgH = imgW / aspect;
-                      if (imgH > 100) { imgH = 100; imgW = imgH * aspect; } // Cap height
-                      rowH += imgH + 15;
-                    }
-
-                    if (yPos + rowH > pageH - margin - 40) {
-                      doc.addPage();
-                      drawHeaderBanner();
-                      yPos = 90;
-                      yPos = drawSectionTitle('ISSUE LOG (Cont.)', yPos);
-                      yPos += 15;
-                    }
-
-                    var config = getDefectConfig(mark.category);
-                    var issueCode = getIssueCode(mark);
-                    var colorRgb = hexToRgb(config.color || '#64748b');
-
-                    // Draw issue box background
-                    doc.setFillColor(249, 250, 251); // #f9fafb
-                    doc.setDrawColor(229, 231, 235); // #e5e7eb
-                    doc.setLineWidth(1);
-                    doc.roundedRect(tableX, yPos, tableW, rowH - 4, 6, 6, 'FD');
-
-                    // Left color stripe
-                    doc.setFillColor(colorRgb.r, colorRgb.g, colorRgb.b);
-                    doc.roundedRect(tableX, yPos, 8, rowH - 4, 6, 6, 'F');
-                    // Square off right side of stripe
-                    doc.rect(tableX + 4, yPos, 4, rowH - 4, 'F');
-
-                    var textX = tableX + 20;
-                    var textY = yPos + 18;
-
-                    // Issue Code & Category
-                    doc.setFontSize(11);
-                    doc.setFont('helvetica', 'bold');
-                    doc.setTextColor(31, 41, 55);
-                    doc.text(issueCode + ' — ' + mark.category, textX, textY);
-
-                    // Location badge/text (right aligned)
-                    doc.setFontSize(9);
-                    doc.setFont('helvetica', 'normal');
-                    doc.setTextColor(107, 114, 128);
-                    var locationText = 'Loc: ' + formatPartName(mark.partId || '');
-                    var locW = doc.getTextWidth(locationText);
-                    doc.text(locationText, tableX + tableW - locW - 10, textY);
-
-                    textY += 16;
-
-                    // Comment lines
-                    doc.setFontSize(10);
-                    doc.setFont('helvetica', 'normal');
-                    doc.setTextColor(75, 85, 99);
-                    doc.text(commentLines, textX, textY);
-                    textY += commentLines.length * 12 + 6;
-
-                    // Draw image if exists
-                    if (mark._preloadedImage && mark._preloadedImage.dataUrl) {
-                      doc.setDrawColor(200, 200, 200);
-                      doc.setLineWidth(1);
-                      doc.rect(textX - 1, textY - 1, imgW + 2, imgH + 2);
-                      doc.addImage(mark._preloadedImage.dataUrl, 'PNG', textX, textY, imgW, imgH);
-                    }
-
-                    yPos += rowH + 6;
-                  });
-                }
-
-                // ── Acknowledgement & Signatures ───────────────────────────
-                // Add acknowledgement at the end of the current page (no new page)
-                var ackText = "I hereby acknowledge that I have examined this vehicle. I Agree with the all conditions and exeptions noted hereon, AIAin Class Motors will not entertain/be heldresponsible for any caims arising due to damage after and acknow- edgement orwhile storing the Vehice after Delivery.";
-
-                // Check if we need a new page for acknowledgement section
-                var ackSectionHeight = 150; // Estimated height needed for acknowledgement section
-                if (yPos + ackSectionHeight > pageH - margin - 60) {
-                  doc.addPage();
-                  drawHeaderBanner();
-                  yPos = 90;
-                }
-                
-                yPos += 20; // Add some spacing before acknowledgement
-
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(75, 85, 99);
-                var splitAck = doc.splitTextToSize(ackText, tableW);
-                doc.text(splitAck, margin, yPos);
-                yPos += (splitAck.length * 12) + 30;
-
-                doc.setFontSize(11);
-                doc.setTextColor(31, 41, 55);
-
-                var leftX = margin + 10;
-                var rightX = pageW / 2 + 10;
-
-                // Get form field values - use options.signData if available (for Sign flow), otherwise fall back to DOM
-                var handoverName = (signDetails && signDetails.handover && signDetails.handover.name) ? signDetails.handover.name : 
-                                   (document.getElementById('handover_name') ? document.getElementById('handover_name').value.trim() : '');
-                var handoverPhone = (signDetails && signDetails.handover && signDetails.handover.phone) ? signDetails.handover.phone : 
-                                    (document.getElementById('handover_phone') ? document.getElementById('handover_phone').value.trim() : '');
-                var receivedName = (signDetails && signDetails.received && signDetails.received.name) ? signDetails.received.name : 
-                                   (document.getElementById('received_name') ? document.getElementById('received_name').value.trim() : '');
-                var receivedPhone = (signDetails && signDetails.received && signDetails.received.phone) ? signDetails.received.phone : 
-                                    (document.getElementById('received_phone') ? document.getElementById('received_phone').value.trim() : '');
-
-                doc.text("Hand Over by: " + handoverName, leftX, yPos);
-                doc.text("Received by: " + receivedName, rightX, yPos);
-
-                yPos += 28;
-                doc.text("Phone Number: " + handoverPhone, leftX, yPos);
-                doc.text("Phone Number: " + receivedPhone, rightX, yPos);
-
-                yPos += 28;
-                doc.text("Signature: {{Signature:Recipient1*}}", leftX, yPos);
-                doc.text("Signature: {{Signature:Recipient2*}}", rightX, yPos);
-
-                yPos += 40;
-
-                // Draw Footer on all pages
-                var totalPages = doc.internal.getNumberOfPages();
-                for (var i = 1; i <= totalPages; i++) {
-                  doc.setPage(i);
-                  var footerY = pageH - 35;
-
-                  // Slight top border for the footer
-                  doc.setDrawColor(229, 231, 235); // #e5e7eb
-                  doc.setLineWidth(1);
-                  doc.line(margin, footerY - 15, pageW - margin, footerY - 15);
-
-                  // Left Logo (Moved from header)
-                  if (kgbLogo) {
-                    var aspect2 = kgbLogo.width / kgbLogo.height;
-                    var h2 = 28;
-                    var w2 = h2 * aspect2;
-                    doc.addImage(kgbLogo.dataUrl, 'PNG', margin, footerY - 8, w2, h2);
-                  }
-
-                  // Right side contact information
-                  doc.setFontSize(8.5);
-                  doc.setFont('helvetica', 'normal');
-                  doc.setTextColor(156, 163, 175); // Lighter gray
-
-                  var phoneVal = "+971 4 3782222";
-                  var addrVal = "Sheikh Zayed Road-Dubai, UAE-PO.Box 2942740";
-
-                  var rightEdge = pageW - margin;
-                  var pW = doc.getTextWidth(phoneVal);
-                  var iconW = 9;
-                  var iconH = 9;
-
-                  // Line 1: Address and Phone
-                  doc.text(phoneVal, rightEdge - pW, footerY);
-                  if (phoneIcon) doc.addImage(phoneIcon.dataUrl, 'PNG', rightEdge - pW - 13, footerY - 7.5, iconW, iconH);
-                  var addrW = doc.getTextWidth(addrVal);
-                  doc.text(addrVal, rightEdge - pW - 22 - addrW, footerY);
-
-                  // Line 2: Email, Web, Social
-                  var l2Y = footerY + 12;
-                  var socialVal = "alainclassmotors";
-                  var webVal = "www.alainclass.com";
-                  var emailVal = "info@alainclass.com";
-
-                  // Social (rightmost) - Instagram, Facebook, YouTube
-                  var sW = doc.getTextWidth(socialVal);
-                  doc.text(socialVal, rightEdge - sW, l2Y);
-
-                  var icon1X = rightEdge - sW - 13;
-                  if (socialIcon) doc.addImage(socialIcon.dataUrl, 'PNG', icon1X, l2Y - 7.5, iconW, iconH);
-
-                  var icon2X = icon1X - 12;
-                  if (fbIcon) doc.addImage(fbIcon.dataUrl, 'PNG', icon2X, l2Y - 7.5, iconW, iconH);
-
-                  var icon3X = icon2X - 12.5; // Slightly wider icon spacing for youtube
-                  if (ytIcon) doc.addImage(ytIcon.dataUrl, 'PNG', icon3X, l2Y - 7.5, iconW + 1, iconH);
-
-                  // Web (middle)
-                  var curX = icon3X - 14;
-                  var wW = doc.getTextWidth(webVal);
-                  doc.text(webVal, curX - wW, l2Y);
-                  if (webIcon) doc.addImage(webIcon.dataUrl, 'PNG', curX - wW - 13, l2Y - 7.5, iconW, iconH);
-
-                  // Email (leftmost)
-                  curX = curX - wW - 22;
-                  var eW = doc.getTextWidth(emailVal);
-                  doc.text(emailVal, curX - eW, l2Y);
-                  if (emailIcon) doc.addImage(emailIcon.dataUrl, 'PNG', curX - eW - 13, l2Y - 7.5, iconW, iconH);
-                }
-
-                return doc;
-              }
-
-              function hexToRgb(hex) {
-                var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-                return result ? {
-                  r: parseInt(result[1], 16),
-                  g: parseInt(result[2], 16),
-                  b: parseInt(result[3], 16)
-                } : { r: 100, g: 116, b: 139 };
-              }
+        var doc = new jsPDFCtor({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+        var pageW = doc.internal.pageSize.getWidth();
+        var pageH = doc.internal.pageSize.getHeight();
+        var margin = 40;
+        var now = new Date();
+        var recordData = crmState.recordData || {};
+
+        // ========== DEBUG LOGGING ==========
+        console.log('=== PDF GENERATION DEBUG ===');
+        console.log('Full crmState object:', crmState);
+        console.log('recordData object:', recordData);
+        console.log('recordData keys:', Object.keys(recordData));
+        console.log('signDetails object:', signDetails);
+        console.log('issueMarks count:', issueMarks.length);
+        console.log('=== END DEBUG ===');
+        // ===================================
+
+        function getFieldValue(value) {
+          if (value === null || value === undefined) return '';
+          if (typeof value === 'string') return value;
+          if (typeof value === 'number') return String(value);
+          if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+          if (typeof value === 'object') {
+            if (value.name) return String(value.name);
+            if (value.display_value) return String(value.display_value);
+            return '';
+          }
+          return String(value);
+        }
+
+        // Custom Header Banner function
+        function drawHeaderBanner() {
+          // Draw left logo
+          if (alainLogo) {
+            var aspect1 = alainLogo.width / alainLogo.height;
+            var h1 = 36;
+            var w1 = h1 * aspect1;
+            doc.addImage(alainLogo.dataUrl, 'PNG', margin, 17, w1, h1);
+          }
+        }
+
+        // Helper for section titles
+        function drawSectionTitle(title, y) {
+          doc.setFillColor(243, 244, 246); // Light gray #f3f4f6
+          doc.rect(margin, y - 16, pageW - margin * 2, 24, 'F');
+          doc.setTextColor(31, 41, 55);
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'bold');
+          doc.text(title, margin + 10, y);
+          return y + 16; // Return new yPos
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // PAGE 1 — VEHICLE RECEIVED FORM
+        // ══════════════════════════════════════════════════════════
+        drawHeaderBanner();
+
+        var yPos = 80;
+        doc.setTextColor(31, 41, 55);
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.text('VEHICLE RECEIVED FORM', pageW / 2, yPos, { align: 'center' });
+        yPos += 25;
+
+        // ── Top Section General Info ──
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+
+        var dateStr = now.toLocaleDateString();
+        var timeStr = now.toLocaleTimeString();
+
+        // Date boxes (8 smaller boxes for DD MM YYYY)
+        doc.text('Date:', margin, yPos);
+        doc.setFontSize(10);
+
+        yPos += 20;
+        doc.text('Driver:', margin, yPos);
+        doc.line(margin + 35, yPos + 2, margin + 120, yPos + 2);
+        doc.text(getFieldValue(recordData.Consigned_By), margin + 38, yPos);
+
+        doc.text('Petrol Level:', margin + 140, yPos);
+        doc.line(margin + 205, yPos + 2, margin + 280, yPos + 2);
+        doc.text(getFieldValue(recordData.Petrol_Level), margin + 210, yPos);
+
+        // Branch boxes on right
+        var bxX = pageW - margin - 170;
+        doc.line(margin + 300, yPos + 2, pageW - margin, yPos + 2); // fill line
+
+        doc.rect(bxX, yPos - 10, 12, 12);
+        doc.text('SZR', bxX + 16, yPos);
+        doc.rect(bxX + 45, yPos - 10, 12, 12);
+        doc.text('Al AWEER', bxX + 61, yPos);
+        doc.rect(bxX + 120, yPos - 10, 12, 12);
+        doc.text('Al AIN', bxX + 136, yPos);
+
+        var branch = getFieldValue(recordData.Branch || recordData.Location || '').toUpperCase();
+
+        function drawTick(tx, ty) {
+          doc.setLineWidth(1.5);
+          doc.line(tx, ty - 1, tx + 3, ty + 2);
+          doc.line(tx + 3, ty + 2, tx + 8, ty - 5);
+          doc.setLineWidth(1);
+        }
+        if (branch.indexOf('SZR') > -1) drawTick(bxX + 2, yPos - 4);
+        if (branch.indexOf('AWEER') > -1) drawTick(bxX + 47, yPos - 4);
+        if (branch.indexOf('AIN') > -1) drawTick(bxX + 122, yPos - 4);
+
+        yPos += 20;
+        doc.text('Time:', margin, yPos);
+        doc.line(margin + 35, yPos + 2, margin + 120, yPos + 2);
+        doc.text(timeStr, margin + 38, yPos);
+
+        doc.text('Error/s:', margin + 140, yPos);
+        doc.line(margin + 205, yPos + 2, margin + 280, yPos + 2);
+        doc.text('', margin + 210, yPos);
+
+        yPos += 15;
+
+        // ── Main Structure Grid ──
+        var leftW = 250; // Increased left section width to allow larger image natively
+        var rightX = margin + leftW;
+        var rightW = pageW - margin - rightX;
+        var gridTop = yPos;
+
+        // 1. Left Column: Vehicle Details
+        doc.setFillColor(230, 230, 230); // light gray for headers
+        doc.rect(margin, gridTop, leftW, 20, 'S'); // Make and Model Header Background uses Stroke (No fill)
+        doc.setFont('helvetica', 'bold');
+        doc.text('Make and Model:', margin + 5, gridTop + 14);
+        doc.setFont('helvetica', 'normal');
+        var makeValue = typeof recordData.Make === 'object' ? getFieldValue(recordData.Make.name) : getFieldValue(recordData.Make);
+        var modelValue = typeof recordData.Model === 'object' ? getFieldValue(recordData.Model.name) : getFieldValue(recordData.Model);
+        doc.text(makeValue + ' ' + modelValue, margin + 100, gridTop + 14);
+
+        doc.rect(margin, gridTop, leftW, 170); // the entire left details bounding box properly spaced
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('V.I.N:', margin + 5, gridTop + 38);
+        doc.setFont('helvetica', 'normal');
+
+        // VIN Boxes
+        var vin = getFieldValue(recordData.V_I_N || recordData.VIN || '').toUpperCase();
+        var vinBoxW = Math.floor((leftW - 55) / 17);
+        for (var i = 0; i < 17; i++) {
+          var vx = margin + 50 + (i * vinBoxW);
+          doc.rect(vx, gridTop + 25, vinBoxW, 17);
+          if (vin[i]) {
+            doc.text(vin[i], vx + 3, gridTop + 37);
+          }
+        }
+
+        doc.line(margin, gridTop + 45, margin + leftW, gridTop + 45); // line below VIN
+        doc.rect(margin, gridTop + 45, leftW, 35, 'S'); // Extra height added (35 instead of 25)
+
+        var yy = gridTop + 57;
+        var lineY = gridTop + 80;
+        doc.setFontSize(8.5);
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('Year Model:', margin + 3, yy);
+        doc.setFont('helvetica', 'normal');
+        doc.text(doc.splitTextToSize(getFieldValue(recordData.Year_Model), 55)[0] || '', margin + 3, yy + 15);
+        doc.line(margin + 65, gridTop + 45, margin + 65, lineY);
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('Mileage:', margin + 68, yy);
+        doc.setFont('helvetica', 'normal');
+        doc.text(doc.splitTextToSize(getFieldValue(recordData.Mileage), 40)[0] || '', margin + 68, yy + 15);
+        doc.line(margin + 110, gridTop + 45, margin + 110, lineY);
+
+        var spec = getFieldValue(recordData.Specs || recordData.Spec || '');
+        var specUp = spec.toUpperCase();
+        doc.setFont('helvetica', 'bold');
+        doc.text('GCC', margin + 113, yy);
+        if (specUp.indexOf('GCC') > -1) drawTick(margin + 119, yy + 14);
+        doc.line(margin + 140, gridTop + 45, margin + 140, lineY);
+
+        doc.text('Euro', margin + 143, yy);
+        if (specUp.indexOf('EURO') > -1 || specUp.indexOf('EUR') > -1) drawTick(margin + 149, yy + 14);
+        doc.line(margin + 170, gridTop + 45, margin + 170, lineY);
+
+        doc.text('U.S.A', margin + 173, yy);
+        if (specUp.indexOf('USA') > -1 || specUp.indexOf('U.S.A') > -1) drawTick(margin + 179, yy + 14);
+        doc.line(margin + 200, gridTop + 45, margin + 200, lineY);
+
+        doc.text('Other', margin + 203, yy);
+        if (spec && specUp.indexOf('GCC') === -1 && specUp.indexOf('EURO') === -1 && specUp.indexOf('USA') === -1) {
+          doc.setFont('helvetica', 'normal');
+          doc.text(doc.splitTextToSize(spec, 55)[0] || '', margin + 203, yy + 15);
+        }
+
+        doc.line(margin, lineY, margin + leftW, lineY); // line below Year/Mileage
+
+        // Colors section replaced with distinct clean text values
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Exterior Colour:', margin + 5, lineY + 15);
+        doc.setFont('helvetica', 'normal');
+        doc.text(doc.splitTextToSize(getFieldValue(recordData.Exterior_Color), leftW - 10)[0] || '', margin + 5, lineY + 30);
+
+        doc.line(margin, lineY + 45, margin + leftW, lineY + 45);
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('Interior Colour:', margin + 5, lineY + 60);
+        doc.setFont('helvetica', 'normal');
+        doc.text(doc.splitTextToSize(getFieldValue(recordData.Interior_Color), leftW - 10)[0] || '', margin + 5, lineY + 75);
+
+        // 2. Right Column: Vehicle Items
+        doc.rect(rightX, gridTop, rightW, 275); // increased height from 250 to 275 to accommodate 'Others:' field
+        doc.rect(rightX, gridTop, rightW, 20, 'S'); // Removed 'FD' to fix red/dark headers
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text('Vehicle Items:', rightX + 5, gridTop + 14);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5); // Making slightly smaller to avoid overlap
+
+        var rightItemsY = gridTop + 35;
+        var lineH = 13.5;
+
+        var rightCol1 = [
+          '__ Key/s _______', '__ Service Book', '__ Manual Book (EN | AR)',
+          '__ Reg. Card', '__ Fire Extinguisher',
+          '__ Tools', '__ Transport Docs',
+          '__ Car Cover', '__ Car Charger', '__ Seat Cover',
+          '__ Spare Tyre', '__ Carpets | Matts', '__ First Aid Kit',
+          '__ Safety Triangle', '__ Tyre Compressor'
+        ];
+
+        var rightCol2 = [
+          '', '', '',
+          '__ Expired', '',
+          '', '__ NOC  | __ VCC',
+          '', '', '',
+          '__ Remotes', '__ Pillow', '__ Warranty',
+          '__ Custom Paper', '__ Repair Kit'
+        ];
+
+        for (var k = 0; k < rightCol1.length; k++) {
+          doc.text(rightCol1[k], rightX + 3, rightItemsY);
+          if (rightCol2[k]) {
+            doc.text(rightCol2[k], rightX + 100, rightItemsY); // squeezed to compensate
+          }
+          rightItemsY += lineH;
+        }
+
+        rightItemsY += 8;
+        doc.text('Plate Number:', rightX + 5, rightItemsY);
+        doc.rect(rightX + 70, rightItemsY - 10, 25, 12); // Plate number box
+        doc.text(doc.splitTextToSize(getFieldValue(recordData.Plate_Number), 100)[0] || '', rightX + 75, rightItemsY - 1);
+        doc.line(rightX + 100, rightItemsY + 2, rightX + rightW - 10, rightItemsY + 2);
+
+        rightItemsY += 15;
+        doc.text('Others:', rightX + 5, rightItemsY);
+        doc.line(rightX + 45, rightItemsY + 2, rightX + rightW - 10, rightItemsY + 2);
+
+        // Keys mappings manually
+        var recordKeysValue = String(getFieldValue(recordData.Keys));
+        if (recordKeysValue !== 'N/A' && recordKeysValue.trim() !== '') {
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(200, 0, 0);
+          doc.text(recordKeysValue, rightX + 40, gridTop + 34);
+          doc.setTextColor(31, 41, 55);
+        }
+        doc.setFont('helvetica', 'normal');
+
+        // ── Bottom Sections below grids ──
+        var codeTop = gridTop + 275; // Pushed down from 250 to 275 avoiding overlap with 'Others:'
+        doc.rect(rightX, codeTop, rightW, 115); // increased box height from 92 to 115 for plenty of space
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Issue Codes:', rightX + 5, codeTop + 13);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+
+        var codeListL = [
+          'RP - Repaint', 'PC - Paint Chip', 'GS - Glass Scratch',
+          'GB - Glass Broken', 'DD - Dents / Dings', 'CR - Curb Rash',
+          'LM - Loose Molding', 'CD - Car is Dirty'
+        ];
+        var codeListR = [
+          'SH - Swirls Hologram', 'WS - Water Spots', 'OX - Oxidation',
+          'CF - Clear Coat Failure', 'DS - Deep Scratch', 'UD - Unknown Defect',
+          'CS - Cracks', 'CC - Car is Clean'
+        ];
+
+        // Now spacing is much looser (11.5 points per row instead of 9.5)
+        for (var c = 0; c < codeListL.length; c++) {
+          doc.text(codeListL[c], rightX + 3, codeTop + 27 + (c * 11.5));
+          var rXOffset = rightX + 115; // Tightened string offset to account for smaller width
+          doc.text(codeListR[c], rXOffset, codeTop + 27 + (c * 11.5));
+        }
+
+        var notesTop = codeTop + 115;
+        doc.rect(rightX, notesTop, rightW, 60); // increased Notes slightly too (60 instead of 55)
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Notes:', rightX + 5, notesTop + 13);
+
+        var priceTop = notesTop + 60;
+        doc.rect(rightX, priceTop, rightW, 25); // Cost Price | Selling
+        doc.text('Cost Price:', rightX + 5, priceTop + 13);
+        doc.line(rightX + rightW / 2, priceTop, rightX + rightW / 2, priceTop + 25);
+        doc.text('Selling:', rightX + rightW / 2 + 5, priceTop + 13);
+
+        var consignedTop = priceTop + 25;
+        doc.rect(rightX, consignedTop, rightW, 25);
+        doc.text('Consigned By:', rightX + 5, consignedTop + 13);
+
+        var inspectedTop = consignedTop + 25;
+        doc.rect(rightX, inspectedTop, rightW, 25);
+        doc.text('Inspected By:', rightX + 5, inspectedTop + 13);
+
+        var sigTop = inspectedTop + 25;
+        doc.rect(rightX, sigTop, rightW, 45);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Name: _______________________________', rightX + 5, sigTop + 14);
+        doc.text('Mobile No: ___________________________', rightX + 5, sigTop + 28);
+        doc.text('Signature: ___________________________', rightX + 5, sigTop + 41);
+
+        // Showroom Manager signature moved up (no image in left column anymore)
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Showroom Manager: ______________________', margin, gridTop + 185);
+
+        // ══════════════════════════════════════════════════════════
+        // PAGE 2 — Inspection Visual & Issue Log
+        // ══════════════════════════════════════════════════════════
+        doc.addPage();
+        drawHeaderBanner();
+
+        yPos = 90;
+
+        // Add Inspection Image at top of Page 2
+        if (imgDataUrl) {
+          var aspect = canvas.width / canvas.height;
+          var maxW = pageW - margin * 2;
+          var maxH = 200; // Max height for image on page 2
+          var drawW = maxW;
+          var drawH = maxW / aspect;
+          if (drawH > maxH) {
+            drawH = maxH;
+            drawW = maxH * aspect;
+          }
+          var cx = margin + (maxW - drawW) / 2;
+          var cy = yPos;
+          doc.addImage(imgDataUrl, 'JPEG', cx, cy, drawW, drawH);
+          yPos = cy + drawH + 20; // Move yPos below image
+        }
+
+        yPos = drawSectionTitle('ISSUE LOG', yPos);
+        yPos += 15;
+
+        var tableX = margin;
+        var tableW = pageW - margin * 2;
+
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(31, 41, 55);
+        doc.text('Total Issues Found: ' + issueMarks.length, tableX, yPos);
+        yPos += 20;
+
+        if (!issueMarks.length) {
+          doc.setFontSize(11);
+          doc.setFont('helvetica', 'italic');
+          doc.setTextColor(107, 114, 128); // #6b7280
+          doc.text('No issues logged in this inspection.', tableX, yPos);
+        } else {
+          issueMarks.forEach(function (mark, idx) {
+            // Pre-calc height to handle pagination
+            var comment = normalizeCommentText(mark.comment) || 'No comment added.';
+            var commentLines = doc.splitTextToSize(comment, tableW - 30);
+            var rowH = 16 + 14 + commentLines.length * 12 + 10;
+
+            var imgH = 0;
+            var imgW = 0;
+            if (mark._preloadedImage && mark._preloadedImage.dataUrl) {
+              var aspect = mark._preloadedImage.width / mark._preloadedImage.height;
+              imgW = 150; // Max width for issue image
+              imgH = imgW / aspect;
+              if (imgH > 100) { imgH = 100; imgW = imgH * aspect; } // Cap height
+              rowH += imgH + 15;
+            }
+
+            if (yPos + rowH > pageH - margin - 40) {
+              doc.addPage();
+              drawHeaderBanner();
+              yPos = 90;
+              yPos = drawSectionTitle('ISSUE LOG (Cont.)', yPos);
+              yPos += 15;
+            }
+
+            var config = getDefectConfig(mark.category);
+            var issueCode = getIssueCode(mark);
+            var colorRgb = hexToRgb(config.color || '#64748b');
+
+            // Draw issue box background
+            doc.setFillColor(249, 250, 251); // #f9fafb
+            doc.setDrawColor(229, 231, 235); // #e5e7eb
+            doc.setLineWidth(1);
+            doc.roundedRect(tableX, yPos, tableW, rowH - 4, 6, 6, 'FD');
+
+            // Left color stripe
+            doc.setFillColor(colorRgb.r, colorRgb.g, colorRgb.b);
+            doc.roundedRect(tableX, yPos, 8, rowH - 4, 6, 6, 'F');
+            // Square off right side of stripe
+            doc.rect(tableX + 4, yPos, 4, rowH - 4, 'F');
+
+            var textX = tableX + 20;
+            var textY = yPos + 18;
+
+            // Issue Code & Category
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(31, 41, 55);
+            doc.text(issueCode + ' — ' + mark.category, textX, textY);
+
+            // Location badge/text (right aligned)
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(107, 114, 128);
+            var locationText = 'Loc: ' + formatPartName(mark.partId || '');
+            var locW = doc.getTextWidth(locationText);
+            doc.text(locationText, tableX + tableW - locW - 10, textY);
+
+            textY += 16;
+
+            // Comment lines
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(75, 85, 99);
+            doc.text(commentLines, textX, textY);
+            textY += commentLines.length * 12 + 6;
+
+            // Draw image if exists
+            if (mark._preloadedImage && mark._preloadedImage.dataUrl) {
+              doc.setDrawColor(200, 200, 200);
+              doc.setLineWidth(1);
+              doc.rect(textX - 1, textY - 1, imgW + 2, imgH + 2);
+              doc.addImage(mark._preloadedImage.dataUrl, 'PNG', textX, textY, imgW, imgH);
+            }
+
+            yPos += rowH + 6;
+          });
+        }
+
+        // ── Acknowledgement & Signatures ───────────────────────────
+        // Add acknowledgement at the end of the current page (no new page)
+        var ackText = "I hereby acknowledge that I have examined this vehicle. I Agree with the all conditions and exeptions noted hereon, AIAin Class Motors will not entertain/be heldresponsible for any caims arising due to damage after and acknow- edgement orwhile storing the Vehice after Delivery.";
+
+        // Check if we need a new page for acknowledgement section
+        var ackSectionHeight = 150; // Estimated height needed for acknowledgement section
+        if (yPos + ackSectionHeight > pageH - margin - 60) {
+          doc.addPage();
+          drawHeaderBanner();
+          yPos = 90;
+        }
+
+        yPos += 20; // Add some spacing before acknowledgement
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(75, 85, 99);
+        var splitAck = doc.splitTextToSize(ackText, tableW);
+        doc.text(splitAck, margin, yPos);
+        yPos += (splitAck.length * 12) + 30;
+
+        doc.setFontSize(11);
+        doc.setTextColor(31, 41, 55);
+
+        var leftX = margin + 10;
+        var rightX = pageW / 2 + 10;
+
+        // Get form field values - use options.signData if available (for Sign flow), otherwise fall back to DOM
+        var handoverName = (signDetails && signDetails.handover && signDetails.handover.name) ? signDetails.handover.name :
+          (document.getElementById('handover_name') ? document.getElementById('handover_name').value.trim() : '');
+        var handoverPhone = (signDetails && signDetails.handover && signDetails.handover.phone) ? signDetails.handover.phone :
+          (document.getElementById('handover_phone') ? document.getElementById('handover_phone').value.trim() : '');
+        var receivedName = (signDetails && signDetails.received && signDetails.received.name) ? signDetails.received.name :
+          (document.getElementById('received_name') ? document.getElementById('received_name').value.trim() : '');
+        var receivedPhone = (signDetails && signDetails.received && signDetails.received.phone) ? signDetails.received.phone :
+          (document.getElementById('received_phone') ? document.getElementById('received_phone').value.trim() : '');
+
+        doc.text("Hand Over by: " + handoverName, leftX, yPos);
+        doc.text("Received by: " + receivedName, rightX, yPos);
+
+        yPos += 28;
+        doc.text("Phone Number: " + handoverPhone, leftX, yPos);
+        doc.text("Phone Number: " + receivedPhone, rightX, yPos);
+
+        yPos += 28;
+        doc.text("Signature: {{Signature:Recipient1*}}", leftX, yPos);
+        doc.text("Signature: {{Signature:Recipient2*}}", rightX, yPos);
+
+        yPos += 40;
+
+        // Draw Footer on all pages
+        var totalPages = doc.internal.getNumberOfPages();
+        for (var i = 1; i <= totalPages; i++) {
+          doc.setPage(i);
+          var footerY = pageH - 35;
+
+          // Slight top border for the footer
+          doc.setDrawColor(229, 231, 235); // #e5e7eb
+          doc.setLineWidth(1);
+          doc.line(margin, footerY - 15, pageW - margin, footerY - 15);
+
+          // Left Logo (Moved from header)
+          if (kgbLogo) {
+            var aspect2 = kgbLogo.width / kgbLogo.height;
+            var h2 = 28;
+            var w2 = h2 * aspect2;
+            doc.addImage(kgbLogo.dataUrl, 'PNG', margin, footerY - 8, w2, h2);
+          }
+
+          // Right side contact information
+          doc.setFontSize(8.5);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(156, 163, 175); // Lighter gray
+
+          var phoneVal = "+971 4 3782222";
+          var addrVal = "Sheikh Zayed Road-Dubai, UAE-PO.Box 2942740";
+
+          var rightEdge = pageW - margin;
+          var pW = doc.getTextWidth(phoneVal);
+          var iconW = 9;
+          var iconH = 9;
+
+          // Line 1: Address and Phone
+          doc.text(phoneVal, rightEdge - pW, footerY);
+          if (phoneIcon) doc.addImage(phoneIcon.dataUrl, 'PNG', rightEdge - pW - 13, footerY - 7.5, iconW, iconH);
+          var addrW = doc.getTextWidth(addrVal);
+          doc.text(addrVal, rightEdge - pW - 22 - addrW, footerY);
+
+          // Line 2: Email, Web, Social
+          var l2Y = footerY + 12;
+          var socialVal = "alainclassmotors";
+          var webVal = "www.alainclass.com";
+          var emailVal = "info@alainclass.com";
+
+          // Social (rightmost) - Instagram, Facebook, YouTube
+          var sW = doc.getTextWidth(socialVal);
+          doc.text(socialVal, rightEdge - sW, l2Y);
+
+          var icon1X = rightEdge - sW - 13;
+          if (socialIcon) doc.addImage(socialIcon.dataUrl, 'PNG', icon1X, l2Y - 7.5, iconW, iconH);
+
+          var icon2X = icon1X - 12;
+          if (fbIcon) doc.addImage(fbIcon.dataUrl, 'PNG', icon2X, l2Y - 7.5, iconW, iconH);
+
+          var icon3X = icon2X - 12.5; // Slightly wider icon spacing for youtube
+          if (ytIcon) doc.addImage(ytIcon.dataUrl, 'PNG', icon3X, l2Y - 7.5, iconW + 1, iconH);
+
+          // Web (middle)
+          var curX = icon3X - 14;
+          var wW = doc.getTextWidth(webVal);
+          doc.text(webVal, curX - wW, l2Y);
+          if (webIcon) doc.addImage(webIcon.dataUrl, 'PNG', curX - wW - 13, l2Y - 7.5, iconW, iconH);
+
+          // Email (leftmost)
+          curX = curX - wW - 22;
+          var eW = doc.getTextWidth(emailVal);
+          doc.text(emailVal, curX - eW, l2Y);
+          if (emailIcon) doc.addImage(emailIcon.dataUrl, 'PNG', curX - eW - 13, l2Y - 7.5, iconW, iconH);
+        }
+
+        return doc;
+      }
+
+      function hexToRgb(hex) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16)
+        } : { r: 100, g: 116, b: 139 };
+      }
 
 
 
@@ -10878,10 +11442,10 @@
           var issueMarks = getAllMarks().filter(function (m) { return Boolean(m.category); });
 
           function loadImg(src) {
-            return new Promise(function(resolve) {
+            return new Promise(function (resolve) {
               var img = new Image();
               img.crossOrigin = 'Anonymous';
-              img.onload = function() {
+              img.onload = function () {
                 var originalWidth = img.width;
                 var originalHeight = img.height;
                 var maxDimension = 1200;
@@ -10899,7 +11463,7 @@
                   height: cvs.height
                 });
               };
-              img.onerror = function() { resolve(null); };
+              img.onerror = function () { resolve(null); };
               img.src = src;
             });
           }
@@ -10909,18 +11473,18 @@
             loadImg('assets/Koenigsegg_Logo.png')
           ];
 
-          issueMarks.forEach(function(m) {
+          issueMarks.forEach(function (m) {
             if (m.attachmentImageData) {
               preloadPromises.push(loadImg(m.attachmentImageData));
             } else if (m.attachmentImageEncryptedId) {
               preloadPromises.push(
                 fetchImageFromCrm(m.attachmentImageEncryptedId, m.crmLineItemId)
-                  .then(function(b64) {
+                  .then(function (b64) {
                     if (!b64) return null;
                     m.attachmentImageData = b64;
                     return loadImg(b64);
                   })
-                  .catch(function() { return null; })
+                  .catch(function () { return null; })
               );
             } else if (m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url)) {
               var localUrl = m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url);
@@ -10928,12 +11492,12 @@
             }
           });
 
-          Promise.all(preloadPromises).then(function(loadedImages) {
+          Promise.all(preloadPromises).then(function (loadedImages) {
             var alainLogo = loadedImages[0];
             var kgbLogo = loadedImages[1];
 
             var issueImgIdx = 2;
-            issueMarks.forEach(function(m) {
+            issueMarks.forEach(function (m) {
               var hasImg = m.attachmentImageData || m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url) || m.attachmentImageEncryptedId;
               if (hasImg) {
                 m._preloadedImage = loadedImages[issueImgIdx++];
@@ -11101,10 +11665,10 @@
           var issueMarks = getAllMarks().filter(function (m) { return Boolean(m.category); });
 
           function loadImg(src) {
-            return new Promise(function(resolve) {
+            return new Promise(function (resolve) {
               var img = new Image();
               img.crossOrigin = 'Anonymous';
-              img.onload = function() {
+              img.onload = function () {
                 var originalWidth = img.width;
                 var originalHeight = img.height;
                 var maxDimension = 1200;
@@ -11122,7 +11686,7 @@
                   height: cvs.height
                 });
               };
-              img.onerror = function() { resolve(null); };
+              img.onerror = function () { resolve(null); };
               img.src = src;
             });
           }
@@ -11132,18 +11696,18 @@
             loadImg('assets/Koenigsegg_Logo.png')
           ];
 
-          issueMarks.forEach(function(m) {
+          issueMarks.forEach(function (m) {
             if (m.attachmentImageData) {
               preloadPromises.push(loadImg(m.attachmentImageData));
             } else if (m.attachmentImageEncryptedId) {
               preloadPromises.push(
                 fetchImageFromCrm(m.attachmentImageEncryptedId, m.crmLineItemId)
-                  .then(function(b64) {
+                  .then(function (b64) {
                     if (!b64) return null;
                     m.attachmentImageData = b64;
                     return loadImg(b64);
                   })
-                  .catch(function() { return null; })
+                  .catch(function () { return null; })
               );
             } else if (m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url)) {
               var localUrl = m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url);
@@ -11151,12 +11715,12 @@
             }
           });
 
-          Promise.all(preloadPromises).then(function(loadedImages) {
+          Promise.all(preloadPromises).then(function (loadedImages) {
             var alainLogo = loadedImages[0];
             var kgbLogo = loadedImages[1];
 
             var issueImgIdx = 2;
-            issueMarks.forEach(function(m) {
+            issueMarks.forEach(function (m) {
               var hasImg = m.attachmentImageData || m.attachmentImageUrl || (m.attachmentOriginalFile && m.attachmentOriginalFile.url) || m.attachmentImageEncryptedId;
               if (hasImg) {
                 m._preloadedImage = loadedImages[issueImgIdx++];
@@ -11310,28 +11874,28 @@
                 updateStatus('PDF attached to CRM. Triggering Zoho Sign dispatch...');
 
                 var payload = {
-                    record_id: crmState.recordId,
-                    attachment_id: (res && res.data && res.data[0] && res.data[0].details ? res.data[0].details.id : ""),
-                    handover_name: handover.name || '',
-                    handover_phone: handover.phone || '',
-                    handover_email: handover.email || '',
-                    received_name: recipientName || '',
-                    received_phone: recipient.phone || '',
-                    received_email: recipientEmail || ''
+                  record_id: crmState.recordId,
+                  attachment_id: (res && res.data && res.data[0] && res.data[0].details ? res.data[0].details.id : ""),
+                  handover_name: handover.name || '',
+                  handover_phone: handover.phone || '',
+                  handover_email: handover.email || '',
+                  received_name: recipientName || '',
+                  received_phone: recipient.phone || '',
+                  received_email: recipientEmail || ''
                 };
-                
+
                 var functionSettings = {
-                    arguments: JSON.stringify({ req: payload })
+                  arguments: JSON.stringify({ req: payload })
                 };
-                
+
                 return zoho.CRM.FUNCTIONS.execute("sendforsign", functionSettings);
-              }).then(function(res2) {
-                  if (res2 && res2.code && res2.code.toUpperCase() === "SUCCESS") {
-                      updateStatus('Document sent for signature successfully!', false);
-                      console.log('[Send for Sign] Sign request created:', res2);
-                  } else {
-                      throw new Error('Error from CRM function: ' + JSON.stringify(res2));
-                  }
+              }).then(function (res2) {
+                if (res2 && res2.code && res2.code.toUpperCase() === "SUCCESS") {
+                  updateStatus('Document sent for signature successfully!', false);
+                  console.log('[Send for Sign] Sign request created:', res2);
+                } else {
+                  throw new Error('Error from CRM function: ' + JSON.stringify(res2));
+                }
               }).catch(function (err) {
                 crmState.lastError = err && err.message ? err.message : String(err || '');
                 console.error('[Send for Sign] Error:', crmState.lastError);
@@ -11636,7 +12200,7 @@
               var dot = document.createElement('span');
               dot.className = 'mobile-part-modal-defect-chip-dot';
               chip.appendChild(dot);
-              chip.appendChild(document.createTextNode(defect.code + ' - ' + defect.id));
+              chip.appendChild(document.createTextNode((defect.shortLabel || defect.code) + ' - ' + (defect.name || defect.id)));
               chip.addEventListener('click', function () {
                 modalActiveTool = defect.id;
                 activeDefectId = defect.id;
@@ -11644,7 +12208,7 @@
                   c.classList.remove('active');
                 });
                 chip.classList.add('active');
-                if (modalStatus) { modalStatus.textContent = 'Selected: ' + defect.id + '. Close to annotate on the map.'; }
+                if (modalStatus) { modalStatus.textContent = 'Selected: ' + (defect.name || defect.id) + '. Close to annotate on the map.'; }
                 // Apply defect on the main map
                 renderLegend();
                 updateBadges();
@@ -11726,5 +12290,4 @@
     })();
   </script>
 </body>
-
 </html>
